@@ -654,17 +654,20 @@ var QZ=[
   w:"Anode and cathode are defined by the <b>reaction</b> — oxidation at the anode, reduction at the cathode. (+) and (−) are a separate label. In a galvanic cell the reaction itself pushes electrons out of the anode, so it is negative; in an electrolytic cell the supply pulls electrons out of the anode, so it is positive. Do not mix the two systems."},
 
  {q:"The table lists <code>Cu²⁺ + 2e⁻ → Cu(s), E° = +0.34 V</code>. What is E° for the oxidation of Cu(s)?",
-  o:["+0.34 V — E° is a property of the substance and does not change",
-     "−0.34 V",
+  o:["−0.34 V",
+     "+0.34 V — E° is a property of the substance and does not change",
      "+0.17 V — divide by the number of electrons",
      "−0.68 V — multiply by the number of electrons"],
-  a:1,
+  a:0,
   w:"Reversing the direction flips the sign. But <b>multiplying the equation by a coefficient does not change E°</b> — it is energy per unit charge (J/C), an intensive property. Only ΔG°, an extensive quantity, scales with n."},
 
- {q:"What is E°<sub>cell</sub> for a galvanic cell built from Zn|Zn²⁺ (−0.76 V) and Cu|Cu²⁺ (+0.34 V)?",
-  o:["+0.42 V","−1.10 V","+1.10 V","+0.34 V"],
-  a:2,
-  w:"E°<sub>cell</sub> = E°<sub>cathode</sub> − E°<sub>anode</sub> = (+0.34) − (−0.76) = +1.10 V. For the cell to be spontaneous the <b>higher</b> E° must be the cathode. Subtract the two values — do not add them."},
+ {q:"A classmate balances the electrons in a cell by doubling a half-reaction and writes <code>2Fe³⁺ + 2e⁻ → 2Fe²⁺, E° = 2 × 0.77 = +1.54 V</code>. Which belief produced that line?",
+  o:["Unit-agnostic formula — a quantity was used without converting its units",
+     "Scaling an intensive quantity — E° was treated as though it grows with the amount of reaction",
+     "Inverted electron ratio — the electron count was multiplied where it should divide",
+     "Double sign flip — a reversed half-reaction was also subtracted"],
+  a:1,
+  w:"E° is energy per unit charge (J C⁻¹). It is <b>intensive</b>: it does not care how you chose to write the equation. ΔG° = −nFE° is extensive and does double, because n doubles while E° stays put. The other three options are real misconceptions with real names — you will meet each of them this term, and the midterm expects you to be able to tell them apart."},
 
  {q:"You pass the same 1 000 C through a solution of Ag⁺ and through a solution of Al³⁺. How do the deposited masses compare?",
   o:["Far more Ag — its atomic mass is larger and it needs only one electron",
@@ -676,18 +679,18 @@ var QZ=[
 
  {q:"Inside the electrolyte, which electrode do <b>anions</b> move toward?",
   o:["The cathode — negative ions are attracted to the negative terminal",
-     "The anode — to balance the positive charge produced by oxidation",
      "They do not move; only electrons do",
+     "The anode — to balance the positive charge produced by oxidation",
      "At random, regardless of the electrode"],
-  a:1,
+  a:2,
   w:"An <b>an</b>ion goes to the <b>an</b>ode, as the name suggests. The reason is electroneutrality: oxidation at the anode releases cations into solution, and anions migrate in to balance them. Electron flow in the external circuit and ion flow inside the cell together close one circuit."},
 
  {q:"A cell is found to have ΔG° = +212 kJ/mol with n = 2. Which statement is correct?",
   o:["E°cell ≈ +1.10 V and it discharges spontaneously",
-     "E°cell ≈ −1.10 V, and an external supply is needed to drive the reaction",
      "ΔG° is positive, so the reaction is impossible under any conditions",
-     "n = 2, so the voltage doubles"],
-  a:1,
+     "n = 2, so the voltage doubles",
+     "E°cell ≈ −1.10 V, and an external supply is needed to drive the reaction"],
+  a:3,
   w:"E° = −ΔG°/(nF) = −212 000/(2 × 96 485) ≈ −1.10 V. That means non-spontaneous <b>under standard conditions</b>, not impossible — apply a voltage, or shift the concentrations (Nernst equation, next lecture)."}
 ];
 
