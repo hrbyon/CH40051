@@ -350,9 +350,12 @@ footer{margin-top:40px;padding-top:20px;border-top:1px solid var(--line);color:v
           <div class="scorenum" id="scoreNum">—</div>
           <div class="vcode" style="margin-top:4px" id="whoLine">—</div>
         </div>
-        <div style="flex:1 1 240px">
-          <button class="solid" id="dlBtn" type="button">Download my result</button>
-          <p class="hint" id="dlHint" style="margin-top:8px">Submit the downloaded file to the LMS assignment for Lecture 1.</p>
+        <div style="flex:1 1 300px">
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="solid" id="sendBtn" type="button" hidden>Submit to the course</button>
+            <button class="ghost" id="dlBtn" type="button">Download my result</button>
+          </div>
+          <p class="hint" id="dlHint" style="margin-top:8px">Download the file and hand it in as your instructor directs.</p>
         </div>
       </div>
     </div>
@@ -872,10 +875,64 @@ dlBtn.addEventListener("click",function(){
   var r=receipt();
   try{
     saveCsv("CH40051-L1-check_"+id.replace(/[^A-Za-z0-9_-]/g,"")+".csv", r.csv);
-    dlHint.textContent="Saved to your downloads folder. Submit that file to the LMS assignment for Lecture 1.";
+    dlHint.textContent="Saved to your downloads folder. Hand it in as your instructor directs.";
   }catch(e){
     dlHint.textContent="Your browser blocked the download. Take a screenshot of this panel and submit that instead.";
   }
+});
+
+
+/* ---- submit straight to the course sheet ----------------------------------
+   Paste the Apps Script /exec URL between the quotes to switch this on.
+   Left empty, the button stays hidden and only the download exists.        */
+var SUBMIT_URL = "https://script.google.com/macros/s/AKfycbxPm7WrbttFu6-gnTi__IcUPt-816GthK0eI8TPuwOZyYlcRW3RAWJlmsr791moxBc5GA/exec";
+
+var sendBtn=document.getElementById("sendBtn");
+if(SUBMIT_URL){
+  sendBtn.hidden=false;
+  dlHint.textContent="Press Submit to send your result to the course. The download is a backup.";
+}
+
+sendBtn.addEventListener("click",function(){
+  var id=(sId.value||"").trim();
+  if(!id){ dlHint.textContent="Enter your student ID first."; return; }
+  var r=receipt();
+  var payload={
+    lecture:"L1", student_id:id, completed_utc:finishedAt||new Date().toISOString(),
+    score:r.score, total:QZ.length, percent:r.pct, verification:r.vcode,
+    answers:picks.map(function(p){ return p>=0?LETTERS[p]:"-"; }),
+    ok:picks.map(function(p,i){ return p===QZ[i].a?1:0; })
+  };
+  sendBtn.disabled=true;
+  dlHint.textContent="Sending…";
+
+  /* text/plain keeps this a simple request, so the browser sends it without
+     a preflight the Apps Script endpoint cannot answer */
+  fetch(SUBMIT_URL,{
+    method:"POST",
+    headers:{"Content-Type":"text/plain;charset=utf-8"},
+    body:JSON.stringify(payload)
+  })
+  .then(function(res){ return res.json(); })
+  .then(function(j){
+    if(j && j.ok){
+      sendBtn.textContent="Submitted \u2713";
+      dlHint.textContent="Recorded for student ID "+id+". You can close this page.";
+    }else{
+      throw new Error((j && j.error) || "rejected");
+    }
+  })
+  .catch(function(){
+    /* the response could not be read - resend blind so the record still
+       lands, then tell the student to keep the file as proof */
+    fetch(SUBMIT_URL,{method:"POST",mode:"no-cors",
+      headers:{"Content-Type":"text/plain;charset=utf-8"},
+      body:JSON.stringify(payload)}).catch(function(){});
+    sendBtn.disabled=false;
+    sendBtn.textContent="Submit to the course";
+    dlHint.textContent="Sent, but the confirmation did not come back. "
+      + "Download the file as well and keep it — it is your proof of submission.";
+  });
 });
 
 load();
