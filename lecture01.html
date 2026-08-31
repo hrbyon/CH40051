@@ -238,7 +238,7 @@ footer{margin-top:40px;padding-top:20px;border-top:1px solid var(--line);color:v
 
       <div class="col-2">
         <div class="card">
-          <div class="card-h"><h2>E diagram</h2><span class="note">electrons flow from low <em>E</em> to high <em>E</em></span></div>
+          <div class="card-h"><h2>E diagram</h2><span class="note">electrons spontaneously flow from low <em>E</em> to high <em>E</em> — the reverse needs a power supply</span></div>
           <div class="card-b scrollx"><svg id="ediag" viewBox="0 0 340 420" width="340" height="420" style="margin:0 auto" role="img" aria-label="Standard potential diagram for the two selected half-reactions"></svg></div>
         </div>
       </div>
@@ -398,7 +398,7 @@ var C = [
  {g:"Gases, ions and redox couples", id:"H2O2", E: 1.78, n:2, ox:[[1,"H₂O₂"],[2,"H⁺"]], red:[[2,"H₂O"]]},
  {g:"Gases, ions and redox couples", id:"F2",   E: 2.87, n:2, ox:[[1,"F₂(g)"]], red:[[2,"F⁻"]]},
 
- {g:"Li-ion electrodes (approximate)", id:"LCO", E: 0.80, n:1, ox:[[1,"Li₁₋ₓCoO₂"],[1,"Li⁺"]], red:[[1,"LiCoO₂"]]},
+ {g:"Li-ion electrodes (approximate)", id:"LCO", E: 0.80, n:1, esym:"x", ox:[[1,"Li₁₋ₓCoO₂"],[1,"Li⁺","x"]], red:[[1,"LiCoO₂"]]},
  {g:"Li-ion electrodes (approximate)", id:"LiC", E:-3.04, n:1, ox:[[1,"Li⁺"],[6,"C"]], red:[[1,"LiC₆"]]}
 ];
 
@@ -409,16 +409,19 @@ var LBL = {SHE:"H⁺/H₂", AgCl:"AgCl/Ag", O2b:"O₂/OH⁻", O2a:"O₂/H₂O",
 
 /* ---------------- helpers ---------------- */
 function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+/* p[2] (and c.esym) hold a symbolic coefficient such as "x", printed tight
+   against the species: 1 → "x", 2 → "2x". Plain numbers keep the trailing space. */
+function co(k,s){return s ? (k===1?"":k)+s : (k===1?"":k+" ");}
 function sp(list,m){
-  return list.map(function(p){var k=p[0]*m;return (k===1?"":k+" ")+p[1];}).join(" + ");
+  return list.map(function(p){return co(p[0]*m,p[2])+p[1];}).join(" + ");
 }
 function half(c,m){
   var e=c.n*m;
-  return sp(c.ox,m)+" + "+(e===1?"":e)+" e⁻  →  "+sp(c.red,m);
+  return sp(c.ox,m)+" + "+co(e,c.esym)+"e⁻  →  "+sp(c.red,m);
 }
 function halfRev(c,m){
   var e=c.n*m;
-  return sp(c.red,m)+"  →  "+sp(c.ox,m)+" + "+(e===1?"":e)+" e⁻";
+  return sp(c.red,m)+"  →  "+sp(c.ox,m)+" + "+co(e,c.esym)+"e⁻";
 }
 function gcd(a,b){while(b){var t=b;b=a%b;a=t;}return a;}
 function lcm(a,b){return a*b/gcd(a,b);}
@@ -426,12 +429,15 @@ function fmt(x,d){var s=x.toFixed(d);return /^-0(\.0*)?$/.test(s)?s.slice(1):s;}
 function byId(id){for(var i=0;i<C.length;i++) if(C[i].id===id) return C[i]; return C[0];}
 
 function overall(cat,mc,an,ma){
-  var L={},R={},order=[];
+  var L={},R={},order=[],sym={};
   function add(map,list,m){
     list.forEach(function(p){
-      var k=p[1];
+      var k=p[1],s=p[2]||"";
       if(!(k in map)) map[k]=0;
       if(order.indexOf(k)<0) order.push(k);
+      /* a species that arrives symbolic from one side and numeric from the
+         other has no common symbol — print it as a plain number */
+      sym[k] = (k in sym) ? (sym[k]===s?s:"") : s;
       map[k]+=p[0]*m;
     });
   }
@@ -443,7 +449,11 @@ function overall(cat,mc,an,ma){
   });
   function str(map){
     var out=order.filter(function(k){return (map[k]||0)>0;})
-      .map(function(k){var v=map[k];return (v===1?"":'<span class="co">'+v+'</span> ')+esc(k);});
+      .map(function(k){
+        var v=map[k],s=sym[k];
+        if(s) return '<span class="co">'+(v===1?"":v)+s+'</span>'+esc(k);
+        return (v===1?"":'<span class="co">'+v+'</span> ')+esc(k);
+      });
     return out.length?out.join(" + "):"—";
   }
   return str(L)+"  →  "+str(R);
