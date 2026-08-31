@@ -531,7 +531,8 @@ function draw(){
 function ediagram(cat,an,Ecell,same){
   var H=420,padT=34,padB=44,axX=196;
   var EMIN=-3.35,EMAX=3.15;
-  function y(E){return padT+(EMAX-E)/(EMAX-EMIN)*(H-padT-padB);}
+  /* electrochemistry convention: negative E at the top, positive E at the bottom */
+  function y(E){return padT+(E-EMIN)/(EMAX-EMIN)*(H-padT-padB);}
   var mono='font-family="IBM Plex Mono,monospace"';
   var s='<defs>'
    +'<marker id="ar" markerWidth="7" markerHeight="7" refX="5.6" refY="3" orient="auto">'
@@ -540,8 +541,8 @@ function ediagram(cat,an,Ecell,same){
    +'<path d="M0,0.4 L6,3 L0,5.6 z" fill="var(--muted)"/></marker></defs>';
 
   s+='<line x1="'+axX+'" y1="'+(padT-16)+'" x2="'+axX+'" y2="'+(H-padB+16)+'" stroke="var(--line-2)" stroke-width="1.4"/>';
-  s+='<text x="'+(axX+8)+'" y="'+(padT-20)+'" fill="var(--muted)" '+mono+' font-size="10.5">+   E vs SHE / V</text>';
-  s+='<text x="'+(axX+8)+'" y="'+(H-padB+28)+'" fill="var(--muted)" '+mono+' font-size="10.5">−</text>';
+  s+='<text x="'+(axX+8)+'" y="'+(padT-20)+'" fill="var(--muted)" '+mono+' font-size="10.5">−   E vs SHE / V</text>';
+  s+='<text x="'+(axX+8)+'" y="'+(H-padB+28)+'" fill="var(--muted)" '+mono+' font-size="10.5">+</text>';
   for(var t=-3;t<=3;t++){
     var yy=y(t);
     s+='<line x1="'+(axX-4)+'" y1="'+yy+'" x2="'+(axX+4)+'" y2="'+yy+'" stroke="var(--line-2)" stroke-width="1"/>';
