@@ -190,18 +190,71 @@ footer{margin-top:40px;padding-top:20px;border-top:1px solid var(--line);color:v
     <div style="flex:1 1 380px">
       <p class="eyebrow"><a href="index.html" style="color:inherit">CH40051 Electroanalytical Chemistry</a> · Lecture 1 · Thermodynamics</p>
       <h1>Electrochemistry Bench</h1>
-      <p class="sub">Pick two half-reactions and a cell assembles itself. Change them and watch where the electrons go, why they go that way, and how much metal a given charge actually deposits.</p>
+      <p class="sub">Start from the charge: pass a current for a while and see how much metal it actually deposits. Then pick two half-reactions, let a cell assemble itself, and watch where the electrons go and why they go that way.</p>
     </div>
   </header>
 
   <div class="tabs" role="tablist">
-    <button class="tab" role="tab" aria-selected="true" aria-controls="p-cell" id="t-cell">Cell Builder</button>
-    <button class="tab" role="tab" aria-selected="false" aria-controls="p-far" id="t-far">Faraday Bench</button>
+    <button class="tab" role="tab" aria-selected="true" aria-controls="p-far" id="t-far">Faraday Bench</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="p-cell" id="t-cell">Cell Builder</button>
     <button class="tab" role="tab" aria-selected="false" aria-controls="p-quiz" id="t-quiz">Concept Check</button>
   </div>
 
   <!-- ============ PANEL 1 ============ -->
-  <section class="panel" id="p-cell" role="tabpanel" aria-labelledby="t-cell">
+  <section class="panel" id="p-far" role="tabpanel" aria-labelledby="t-far">
+    <div class="far">
+
+      <div class="stack">
+        <div class="card">
+          <div class="card-h"><h2>Power settings</h2></div>
+          <div class="card-b stack">
+            <div>
+              <div class="slider-row"><label class="fld" style="margin:0" for="fI">Current I</label><span class="val" id="fIv"></span></div>
+              <input type="range" id="fI" min="0.01" max="3" step="0.01" value="0.5">
+            </div>
+            <div>
+              <div class="slider-row"><label class="fld" style="margin:0" for="fT">Time t</label><span class="val" id="fTv"></span></div>
+              <input type="range" id="fT" min="1" max="300" step="1" value="101">
+            </div>
+            <div>
+              <div class="slider-row"><label class="fld" style="margin:0" for="fE">Current efficiency</label><span class="val" id="fEv"></span></div>
+              <input type="range" id="fE" min="40" max="100" step="1" value="100">
+            </div>
+            <div>
+              <label class="fld" for="fM">Metal to deposit</label>
+              <select id="fM"></select>
+            </div>
+            <div>
+              <label class="fld" for="fA">Electrode area (cm²)</label>
+              <input type="number" id="fA" value="4" min="0.1" step="0.1">
+            </div>
+            <button class="ghost" id="fPreset">Load EXAMPLE 17.2 — Ag, 0.500 A, 101 min</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-h"><h2>What current efficiency means</h2></div>
+          <div class="card-b" style="font-size:13px;color:var(--ink-2);line-height:1.7">
+            In a real cell some of the charge you pass leaks into <strong>side reactions</strong> such as hydrogen evolution. Drop the efficiency below 100 % to see why a measured mass falls short of the calculated one.
+          </div>
+        </div>
+      </div>
+
+      <div class="stack">
+        <div class="card">
+          <div class="card-h"><h2>Following the units</h2><span class="note">charge → moles of electrons → moles of substance → mass</span></div>
+          <div class="card-b"><div class="steps" id="fSteps"></div></div>
+        </div>
+        <div class="card">
+          <div class="card-h"><h2>Same charge, different metals</h2><span class="note">the equivalent weight W<sub>eq</sub> = M/n sets the mass</span></div>
+          <div class="card-b"><div class="bars" id="fBars"></div></div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============ PANEL 2 ============ -->
+  <section class="panel" id="p-cell" role="tabpanel" aria-labelledby="t-cell" hidden>
     <div class="builder">
 
       <div class="col-1 stack">
@@ -263,59 +316,6 @@ footer{margin-top:40px;padding-top:20px;border-top:1px solid var(--line);color:v
               <div class="eq" id="rOverall"></div>
             </div>
           </div>
-        </div>
-      </div>
-
-    </div>
-  </section>
-
-  <!-- ============ PANEL 2 ============ -->
-  <section class="panel" id="p-far" role="tabpanel" aria-labelledby="t-far" hidden>
-    <div class="far">
-
-      <div class="stack">
-        <div class="card">
-          <div class="card-h"><h2>Power settings</h2></div>
-          <div class="card-b stack">
-            <div>
-              <div class="slider-row"><label class="fld" style="margin:0" for="fI">Current I</label><span class="val" id="fIv"></span></div>
-              <input type="range" id="fI" min="0.01" max="3" step="0.01" value="0.5">
-            </div>
-            <div>
-              <div class="slider-row"><label class="fld" style="margin:0" for="fT">Time t</label><span class="val" id="fTv"></span></div>
-              <input type="range" id="fT" min="1" max="300" step="1" value="101">
-            </div>
-            <div>
-              <div class="slider-row"><label class="fld" style="margin:0" for="fE">Current efficiency</label><span class="val" id="fEv"></span></div>
-              <input type="range" id="fE" min="40" max="100" step="1" value="100">
-            </div>
-            <div>
-              <label class="fld" for="fM">Metal to deposit</label>
-              <select id="fM"></select>
-            </div>
-            <div>
-              <label class="fld" for="fA">Electrode area (cm²)</label>
-              <input type="number" id="fA" value="4" min="0.1" step="0.1">
-            </div>
-            <button class="ghost" id="fPreset">Load EXAMPLE 17.2 — Ag, 0.500 A, 101 min</button>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-h"><h2>What current efficiency means</h2></div>
-          <div class="card-b" style="font-size:13px;color:var(--ink-2);line-height:1.7">
-            In a real cell some of the charge you pass leaks into <strong>side reactions</strong> such as hydrogen evolution. Drop the efficiency below 100 % to see why a measured mass falls short of the calculated one.
-          </div>
-        </div>
-      </div>
-
-      <div class="stack">
-        <div class="card">
-          <div class="card-h"><h2>Following the units</h2><span class="note">charge → moles of electrons → moles of substance → mass</span></div>
-          <div class="card-b"><div class="steps" id="fSteps"></div></div>
-        </div>
-        <div class="card">
-          <div class="card-h"><h2>Same charge, different metals</h2><span class="note">the equivalent weight W<sub>eq</sub> = M/n sets the mass</span></div>
-          <div class="card-b"><div class="bars" id="fBars"></div></div>
         </div>
       </div>
 
