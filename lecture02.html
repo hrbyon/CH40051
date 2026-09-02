@@ -187,13 +187,6 @@ footer{margin-top:40px;padding-top:20px;border-top:1px solid var(--line);color:v
           </div>
         </div>
         <div class="card">
-          <div class="card-h"><h2>Activities, not concentrations</h2><span class="note">what the log term really contains</span></div>
-          <div class="card-b" style="font-size:13px;color:var(--ink-2);line-height:1.7">
-            The Nernst equation is written in terms of <strong>activities</strong>: <em>E</em> = <em>E</em>° + (2.303<em>RT</em>/<em>nF</em>) log(<em>a</em><sub>O</sub>/<em>a</em><sub>R</sub>), where <em>a</em> = γ·<em>c</em>/<em>c</em>° and γ is the activity coefficient. On this page, <strong>activities are approximated by concentrations</strong> — that is, γ ≈ 1 — purely for simplicity.
-            That approximation is decent in dilute solution and gets worse as the solution becomes concentrated or the ions more highly charged, where γ can fall well below 1 and shift <em>E</em> by tens of millivolts. So read every number here as an idealised value, not a prediction for a real 1 M solution.
-          </div>
-        </div>
-        <div class="card">
           <div class="card-h"><h2>Why a solid drops out</h2></div>
           <div class="card-b" style="font-size:13px;color:var(--ink-2);line-height:1.7">
             A pure solid or a pure liquid has <strong>activity 1</strong> by definition — there is no "concentration of solid zinc" to change. So for a plating couple only the dissolved species appears in the log term, and the slider for the solid is switched off.
@@ -235,6 +228,14 @@ footer{margin-top:40px;padding-top:20px;border-top:1px solid var(--line);color:v
           <div class="card-b stack" style="gap:11px">
             <div class="eqline" id="nEq"></div>
             <div class="verdict flat" id="nNote"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-h"><h2>Activities, not concentrations</h2><span class="note">what the log term really contains</span></div>
+          <div class="card-b" style="font-size:13px;color:var(--ink-2);line-height:1.7">
+            The Nernst equation is written in terms of <strong>activities</strong>: <em>E</em> = <em>E</em>° + (2.303<em>RT</em>/<em>nF</em>) log(<em>a</em><sub>O</sub>/<em>a</em><sub>R</sub>), where <em>a</em> = γ·<em>c</em>/<em>c</em>° and γ is the activity coefficient. On this page, <strong>activities are approximated by concentrations</strong> — that is, γ ≈ 1 — purely for simplicity.
+            That approximation is decent in dilute solution and gets worse as the solution becomes concentrated or the ions more highly charged, where γ can fall well below 1 and shift <em>E</em> by tens of millivolts. So read every number here as an idealised value, not a prediction for a real 1 M solution.
           </div>
         </div>
       </div>
