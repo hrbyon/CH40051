@@ -326,11 +326,11 @@ footer{margin-top:40px;padding-top:20px;border-top:1px solid var(--line);color:v
             </div>
             <div>
               <div class="slider-row"><span class="fld" style="margin:0">Starting [Zn²⁺]</span><span class="val" id="valdZn"></span></div>
-              <input type="range" id="dZn" min="-3" max="0.3" step="0.05" value="0">
+              <input type="range" id="dZn" min="-3" max="0.3" step="0.05" value="-3">
             </div>
             <div>
               <div class="slider-row"><span class="fld" style="margin:0">Starting [Cu²⁺]</span><span class="val" id="valdCu"></span></div>
-              <input type="range" id="dCu" min="-3" max="0.3" step="0.05" value="0">
+              <input type="range" id="dCu" min="-3" max="0.3" step="0.05" value="-3">
             </div>
             <div>
               <div class="slider-row"><span class="fld" style="margin:0">Temperature</span><span class="val" id="valdT"></span></div>
@@ -442,6 +442,12 @@ footer{margin-top:40px;padding-top:20px;border-top:1px solid var(--line);color:v
             <div class="readout"><span class="k">Applied potential</span><span class="v" id="fEapp">—</span></div>
             <div class="readout"><span class="k">Overpotential η</span><span class="v" id="fEta">—</span></div>
             <div class="readout"><span class="k">E<sub>F</sub> vs vacuum</span><span class="v" id="fEf">—</span></div>
+            <div class="eqline" id="fEtaEq"></div>
+            <p style="margin:0;font-size:12.5px;color:var(--ink-2);line-height:1.7">
+              η is not a potential in its own right — it is the <strong>distance from equilibrium</strong>, and it only exists relative to a couple. At η = 0 the interface is not idle: oxidation and reduction both run, at equal rates, so nothing appears in the wire. Making η negative raises E<sub>F</sub> above the couple's level and reduction outruns oxidation; making it positive does the reverse.
+              <br><br>
+              Its <em>size</em> sets the rate. The faradaic current grows by roughly a decade for every <strong>120 mV</strong> of η, which is why the useful range is a few hundred millivolts wide rather than a few volts — and why the counter electrode in Lecture 3 needs its own η to carry the same current.
+            </p>
           </div>
         </div>
         <div class="card">
@@ -728,6 +734,9 @@ function runD(){
   dAnim=requestAnimationFrame(tick);
 }
 
+/* the cell holds 53 A.h at 1 M and 53 mA.h at 1 mM, so the unit has to
+   follow the number — otherwise every tick on the capacity axis reads 0 */
+function ahShow(q){ return q>=1 ? fmt(q,2)+" A·h" : fmt(q*1000,1)+" mA·h"; }
 function cShow(x){ return x>=0.01 ? x.toFixed(x>=1?2:3)+" M" : x.toExponential(1)+" M"; }
 
 /* concentrations after a fraction xi of the starting Cu2+ has plated out */
@@ -758,7 +767,7 @@ function daniell(){
   document.getElementById("dQ").textContent=(Q>=0.01&&Q<1e4)?fmt(Q,2):Q.toExponential(1);
   document.getElementById("dLogQ").textContent=(lg>=0?"+":"")+fmt(lg,2);
   document.getElementById("dSlope").textContent=fmt(slope*1000,1)+" mV/decade";
-  document.getElementById("dCharge").textContent=fmt(charge,1)+" A·h";
+  document.getElementById("dCharge").textContent=ahShow(charge);
 
   document.getElementById("dEq").innerHTML=
      "E = E°<sub>cell</sub> − (2.303RT/nF) · log( [Zn²⁺] / [Cu²⁺] )<br>"
@@ -882,6 +891,7 @@ function dplot(xi,a,b,slope,E){
   var mono='font-family="IBM Plex Mono,monospace"';
   var s="";
   var qmax=DAN.n*b*DAN.vol*F/3600;               /* A.h at full conversion */
+  var qBig=qmax>=1, qScale=qBig?1:1000, qUnit=qBig?"A·h":"mA·h";
   /* frame */
   s+='<line x1="'+L+'" y1="'+Tp+'" x2="'+L+'" y2="'+(H-B)+'" stroke="var(--line-2)" stroke-width="1.2"/>';
   s+='<line x1="'+L+'" y1="'+(H-B)+'" x2="'+(W-Rr)+'" y2="'+(H-B)+'" stroke="var(--line-2)" stroke-width="1.2"/>';
@@ -889,9 +899,9 @@ function dplot(xi,a,b,slope,E){
     var tt=Math.min(t,XMAX);
     s+='<line x1="'+X(tt)+'" y1="'+(H-B)+'" x2="'+X(tt)+'" y2="'+(H-B+4)+'" stroke="var(--line-2)"/>';
     s+='<text x="'+X(tt)+'" y="'+(H-B+16)+'" text-anchor="middle" fill="var(--muted)" '+mono+' font-size="9.5">'+t.toFixed(2)+'</text>';
-    s+='<text x="'+X(tt)+'" y="'+(H-B+29)+'" text-anchor="middle" fill="var(--line-2)" '+mono+' font-size="8.5">'+(qmax*t).toFixed(0)+'</text>';
+    s+='<text x="'+X(tt)+'" y="'+(H-B+29)+'" text-anchor="middle" fill="var(--line-2)" '+mono+' font-size="8.5">'+(qmax*t*qScale).toFixed(qBig?0:1)+'</text>';
   });
-  s+='<text x="'+(L-7)+'" y="'+(H-B+29)+'" text-anchor="end" fill="var(--line-2)" '+mono+' font-size="8.5">A·h</text>';
+  s+='<text x="'+(L-7)+'" y="'+(H-B+29)+'" text-anchor="end" fill="var(--line-2)" '+mono+' font-size="8.5">'+qUnit+'</text>';
   s+='<text x="'+((L+W-Rr)/2)+'" y="'+(H-8)+'" text-anchor="middle" fill="var(--muted)" '+mono+' font-size="10">ξ — fraction of the Cu²⁺ used up</text>';
   for(i=0;i<=4;i++){
     v=ymin+(ymax-ymin)*i/4;
@@ -1072,6 +1082,15 @@ function fermi(){
   document.getElementById("fEapp").textContent=fmt(Eapp,2)+" V";
   document.getElementById("fEta").textContent=(eta>=0?"+":"")+fmt(eta,2)+" V";
   document.getElementById("fEf").textContent=fmt(-(VAC+Eapp),2)+" eV";
+
+  /* the definition, filled in — the readouts above are its three terms */
+  document.getElementById("fEtaEq").innerHTML=
+     "η &equiv; E &minus; E<sub>eq</sub><br>"
+    +"η = ("+fmt(Eapp,2)+") &minus; ("+fmt(Eeq,2)+")<br>"
+    +"η = <b>"+(eta>=0?"+":"")+fmt(eta,3)+" V</b>"
+    +(Math.abs(eta)<0.02 ? " &mdash; at equilibrium"
+      : eta<0 ? " &mdash; cathodic, driving reduction"
+              : " &mdash; anodic, driving oxidation");
 
   var v=document.getElementById("fVerdict");
   if(Math.abs(eta)<0.02){
