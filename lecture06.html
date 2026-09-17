@@ -1,0 +1,1974 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Ion Interactions Bench</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Serif:wght@500;600&display=swap">
+<style>
+:root{
+  --ground:#F1F3F2; --surface:#FFFFFF; --surface-2:#E9EDEB;
+  --ink:#14191B; --ink-2:#3E4A4D; --muted:#68767A; --line:#D6DDDA; --line-2:#C3CCC8;
+  --ox:#A85B33; --ox-soft:#F3E4DA;
+  --red-:#15618E; --red-soft:#DDE9F2;
+  --go:#2C7355; --go-soft:#DCEBE3;
+  --sph:#8E3B8C;
+  --stop:#8A5F0C; --stop-soft:#F3E9D3;
+  --elec:#3E4A4D;
+  --shadow:0 1px 2px rgba(20,25,27,.05),0 8px 24px -12px rgba(20,25,27,.18);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#0F1315; --surface:#171C1E; --surface-2:#1F2528;
+    --ink:#E7EDEB; --ink-2:#BDC8C6; --muted:#8B999C; --line:#2A3235; --line-2:#3A4448;
+    --ox:#D08551; --ox-soft:#33231A;
+    --red-:#5AA6D4; --red-soft:#152833;
+    --go:#5DBB8D; --go-soft:#152A21;
+  --sph:#D38AD0;
+    --stop:#D6A33F; --stop-soft:#2B2415;
+    --elec:#AEBBBE;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0F1315; --surface:#171C1E; --surface-2:#1F2528;
+  --ink:#E7EDEB; --ink-2:#BDC8C6; --muted:#8B999C; --line:#2A3235; --line-2:#3A4448;
+  --ox:#D08551; --ox-soft:#33231A;
+  --red-:#5AA6D4; --red-soft:#152833;
+  --go:#5DBB8D; --go-soft:#152A21;
+  --sph:#D38AD0;
+  --stop:#D6A33F; --stop-soft:#2B2415;
+  --elec:#AEBBBE;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.7);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);
+  font-family:"IBM Plex Sans",system-ui,-apple-system,sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding:32px 20px 72px}
+.masthead{display:flex;flex-wrap:wrap;align-items:flex-end;gap:20px 32px;padding-bottom:20px;border-bottom:1px solid var(--line)}
+.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+.eyebrow a{color:inherit}
+h1{font-family:"IBM Plex Serif",Georgia,serif;font-weight:600;font-size:clamp(28px,4.2vw,42px);line-height:1.12;margin:0;text-wrap:balance;letter-spacing:-.015em}
+.sub{margin:8px 0 0;color:var(--ink-2);font-size:15px;max-width:62ch}
+.tabs{display:flex;gap:2px;margin:24px 0 22px;border-bottom:1px solid var(--line);overflow-x:auto}
+.tab{appearance:none;background:none;border:0;border-bottom:2px solid transparent;color:var(--muted);
+  font-family:inherit;font-size:14.5px;font-weight:500;padding:11px 16px;cursor:pointer;white-space:nowrap;margin-bottom:-1px}
+.tab:hover{color:var(--ink-2)}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--ox)}
+.tab:focus-visible{outline:2px solid var(--red-);outline-offset:-2px;border-radius:4px 4px 0 0}
+.panel[hidden]{display:none}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow)}
+.card-h{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.card-h h2{font-size:15px;font-weight:600;margin:0;letter-spacing:-.01em}
+.card-h .note{font-size:12.5px;color:var(--muted)}
+.rowhead{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin:0 0 12px;
+  padding-bottom:9px;border-bottom:1px solid var(--line)}
+.rowhead h3{margin:0;font-size:16.5px;font-weight:600;letter-spacing:-.01em}
+.rowhead .tag{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.1em;
+  text-transform:uppercase;padding:3px 8px;border-radius:4px;background:var(--surface-2);color:var(--muted)}
+.rowhead .note{font-size:12.5px;color:var(--muted)}
+.rowhead.rowsep{margin-top:34px}
+.card-b{padding:18px}
+.stack{display:flex;flex-direction:column;gap:16px}
+.two{display:grid;grid-template-columns:minmax(270px,1fr) minmax(330px,1.45fr);gap:16px;align-items:start}
+@media(max-width:900px){.two{grid-template-columns:1fr}}
+label.fld,span.fld{display:block;font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+select,input[type=text],input[type=number]{width:100%;font-family:inherit;font-size:14px;color:var(--ink);
+  background:var(--surface-2);border:1px solid var(--line-2);border-radius:7px;padding:9px 10px}
+input:read-only{background:var(--surface);color:var(--muted);cursor:not-allowed}
+select:focus-visible,input:focus-visible{outline:2px solid var(--red-);outline-offset:1px}
+input[type=range]{width:100%;accent-color:var(--ox)}
+input[type=range]:focus-visible{outline:2px solid var(--red-);outline-offset:3px}
+.slider-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;gap:10px}
+.slider-row .val{font-family:"IBM Plex Mono",monospace;font-size:14px;font-weight:500;color:var(--ink);font-variant-numeric:tabular-nums}
+.readout{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:10px 0;border-bottom:1px dotted var(--line)}
+.readout:last-child{border-bottom:0}
+.readout .k{font-size:13px;color:var(--muted)}
+.readout .v{font-family:"IBM Plex Mono",monospace;font-size:16px;font-weight:500;font-variant-numeric:tabular-nums;color:var(--ink)}
+.verdict{padding:12px 14px;border-radius:8px;font-size:13.5px;line-height:1.55}
+.verdict.go{background:var(--go-soft);color:var(--go)}
+.verdict.stop{background:var(--stop-soft);color:var(--stop)}
+.verdict.flat{background:var(--surface-2);color:var(--ink-2)}
+.eqline{font-family:"IBM Plex Mono",monospace;font-size:13px;line-height:1.9;color:var(--ink-2);
+  background:var(--surface-2);border-radius:7px;padding:11px 13px}
+.eqline b{color:var(--ox);font-weight:600}
+svg{display:block;max-width:100%}
+.scrollx{overflow-x:auto}
+.solid{appearance:none;background:var(--ox);border:1px solid var(--ox);color:#fff;font-family:inherit;
+  font-size:13.5px;font-weight:500;padding:10px 16px;border-radius:7px;cursor:pointer}
+.solid:hover{filter:brightness(1.08)}
+.solid:disabled{background:var(--line-2);border-color:var(--line-2);color:var(--muted);cursor:not-allowed}
+.ghost{appearance:none;background:var(--surface-2);border:1px solid var(--line-2);color:var(--ink-2);
+  font-family:inherit;font-size:12.5px;padding:8px 12px;border-radius:7px;cursor:pointer;text-align:left}
+.ghost:hover{border-color:var(--ox);color:var(--ox)}
+table.ions{border-collapse:collapse;width:100%;font-size:13px}
+table.ions th,table.ions td{text-align:left;padding:8px 9px;border-bottom:1px solid var(--line);white-space:nowrap}
+table.ions th{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:500}
+table.ions td.num{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;text-align:right}
+table.psitab th{text-transform:none;letter-spacing:0;font-size:12px;white-space:normal}
+table.psitab th[scope=row]{font-family:inherit;font-size:13px;letter-spacing:0;text-transform:none;font-weight:600}
+table.psitab td{font-family:"IBM Plex Mono",monospace;font-size:13px;white-space:normal;vertical-align:middle}
+table.fptab{table-layout:fixed}
+table.fptab th{text-transform:none;letter-spacing:0;font-size:12px;white-space:normal}
+table.fptab thead th:first-child{width:18%}
+table.fptab th[scope=row]{font-family:inherit;font-size:13px;font-weight:600;color:var(--ink);vertical-align:top}
+table.fptab td{white-space:normal;vertical-align:top;line-height:1.55}
+.fx{font-family:"IBM Plex Mono",monospace;font-size:12.5px;white-space:nowrap}
+table.fptab .fx{white-space:normal}
+tr.support td{color:var(--red-)}
+tr.analyte td{color:var(--ox);font-weight:500}
+.bar{display:grid;grid-template-columns:1fr;gap:0;margin-top:4px}
+.tstrip{display:flex;height:22px;border-radius:4px;overflow:hidden;background:var(--surface-2)}
+.tstrip i{display:block;height:100%}
+.tlegend{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--muted)}
+.tlegend span b{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px}
+.idgrid{display:grid;grid-template-columns:1fr;gap:14px;max-width:340px}
+.scorebar{display:flex;flex-wrap:wrap;align-items:center;gap:14px 20px;padding:14px 18px;border-top:1px solid var(--line)}
+.scorenum{font-family:"IBM Plex Mono",monospace;font-size:26px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1}
+.scorenum small{font-size:14px;font-weight:400;color:var(--muted)}
+.vcode{font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--muted)}
+.vcode b{color:var(--ink);font-weight:600;letter-spacing:.08em}
+.quiz{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:16px}
+.q .stem{font-size:14.5px;line-height:1.6;margin:0 0 12px}
+.q .stem code{font-family:"IBM Plex Mono",monospace;font-size:13px;background:var(--surface-2);padding:1px 5px;border-radius:4px}
+.opts{display:flex;flex-direction:column;gap:7px}
+.opt{appearance:none;text-align:left;font-family:inherit;font-size:13.5px;line-height:1.45;color:var(--ink);
+  background:var(--surface-2);border:1px solid transparent;border-radius:7px;padding:9px 12px;cursor:pointer;display:flex;gap:9px}
+.opt .ltr{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--muted);flex:0 0 auto;padding-top:1px}
+.opt:hover:not(:disabled){border-color:var(--line-2)}
+.opt.right{background:var(--go-soft);color:var(--go);border-color:var(--go);font-weight:500}
+.opt.right .ltr{color:var(--go)}
+.opt.wrong{background:var(--stop-soft);color:var(--stop);border-color:var(--stop)}
+.opt.wrong .ltr{color:var(--stop)}
+.opt:disabled{cursor:default}
+.why{margin:12px 0 0;font-size:13px;line-height:1.65;color:var(--ink-2);border-left:2px solid var(--line-2);padding-left:12px}
+.misc{display:block;margin-top:10px;padding:9px 12px;border-radius:7px;background:var(--stop-soft);color:var(--stop);font-size:12.5px;line-height:1.6}
+.misc a{color:inherit;font-weight:600;white-space:nowrap}
+.why[hidden]{display:none}
+.tally{font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.hint{font-size:12.5px;color:var(--muted);line-height:1.65;margin:10px 0 0}
+.locked{display:inline-block;font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.1em;
+  text-transform:uppercase;background:var(--go-soft);color:var(--go);padding:2px 7px;border-radius:4px;margin-left:8px}
+/* ---- flux / Fick / migration panels ------------------------------------- */
+.pill-row{display:flex;gap:3px;background:var(--surface-2);border-radius:8px;padding:3px}
+.pill{flex:1;appearance:none;border:0;background:none;font-family:"IBM Plex Mono",monospace;font-size:12.5px;
+  font-weight:500;color:var(--muted);padding:7px 2px;border-radius:6px;cursor:pointer}
+.pill[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+.pill:focus-visible{outline:2px solid var(--red-);outline-offset:1px}
+/* nowrap + scroll: a formula broken across lines mid-term is harder to read
+   than one the reader has to nudge sideways.  Explicit <br> still breaks. */
+.eqbig{font-family:"IBM Plex Mono",monospace;font-size:13.5px;line-height:2.05;color:var(--ink);
+  background:var(--surface-2);border-radius:8px;padding:14px 15px;overflow-x:auto;white-space:nowrap}
+.eqbig small{color:var(--muted);font-size:11.5px;letter-spacing:.04em}
+.dif{color:var(--red-);font-weight:600}
+.mig{color:var(--ox);font-weight:600}
+.con{color:var(--go);font-weight:600}
+.sph{color:var(--sph);font-weight:600}
+.termtbl{border-collapse:collapse;width:100%;font-size:13px}
+.termtbl td,.termtbl th{padding:7px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+.termtbl th{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);font-weight:500;text-align:left}
+.termtbl td.num{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;text-align:right}
+.termtbl tr.tot td{border-bottom:0;border-top:2px solid var(--line-2);font-weight:600}
+.termtbl td.dir{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--muted);text-align:right}
+.swatch{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px}
+.trio3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;align-items:stretch}
+.trio3>.card{display:flex;flex-direction:column}
+.trio3>.card>.card-b:last-child{flex:1 1 auto}
+@media(max-width:1000px){.trio3{grid-template-columns:1fr 1fr}}
+@media(max-width:720px){.trio3{grid-template-columns:1fr}}
+.two.eq{align-items:stretch}
+.two.eq>.card{display:flex;flex-direction:column}
+.two.eq>.card>.card-b:last-child{flex:1 1 auto}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap}
+.btnrow .ghost{flex:1 1 auto;text-align:center}
+.fpgrid{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:stretch}
+.fpgrid>.card{display:flex;flex-direction:column}
+.fpgrid>.card>.card-b{flex:1 1 auto}
+.fpctl{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:end;min-height:58px}
+.fpbody .fpread{margin-top:auto}
+@media(max-width:900px){.fpgrid{grid-template-columns:1fr}}
+@media(max-width:520px){.fpctl{grid-template-columns:1fr}}
+footer{margin-top:40px;padding-top:20px;border-top:1px solid var(--line);color:var(--muted);font-size:12.5px;line-height:1.8}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+.glegend{display:flex;flex-direction:column;gap:5px;font-size:12.5px;line-height:1.45;color:var(--ink-2)}
+.glegend > span{display:flex;align-items:flex-start;gap:8px}
+.glegend > span > svg{flex:0 0 26px;margin-top:3px}
+.atmfig{display:grid;grid-template-columns:minmax(240px,320px) minmax(0,1fr);gap:10px 22px;align-items:center}
+@media(max-width:720px){.atmfig{grid-template-columns:1fr}}
+.atmdefs{grid-column:1 / -1;display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:6px 22px;
+  font-size:12.5px;line-height:1.45;color:var(--ink-2);border-top:1px solid var(--line);padding-top:10px}
+.atmdefs > div{display:grid;grid-template-columns:3.2em 1fr;gap:8px}
+.atmdefs .sym{font-family:"IBM Plex Mono",monospace;font-weight:700;text-align:right;color:var(--ink)}
+#p-atm .g-atm .atmfig{grid-template-columns:1fr}
+#p-atm .g-atm .atmdefs{grid-template-columns:1fr}
+#p-atm .g-atm .atmmodel svg{max-width:300px}
+#p-atm .g-atm .eqbig{white-space:normal}
+.atmgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:auto 1fr;gap:16px;align-items:stretch}
+.atmgrid>.card{display:flex;flex-direction:column}
+.atmgrid>.card>.card-b:last-child{flex:1 1 auto}
+.g-atm{grid-column:1;grid-row:1 / span 2}
+.g-sph{grid-column:2;grid-row:1}
+.g-enc{grid-column:3;grid-row:1}
+.g-gauss{grid-column:2 / span 2;grid-row:2}
+@media(max-width:1000px){.atmgrid{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:auto}
+  .g-atm,.g-gauss{grid-column:1 / -1;grid-row:auto}.g-sph{grid-column:1;grid-row:auto}.g-enc{grid-column:2;grid-row:auto}}
+@media(max-width:720px){.atmgrid{grid-template-columns:1fr}.g-sph,.g-enc{grid-column:1}}
+/* the two sphere cards: tighter legends and readouts so their column is not the tallest thing on the page */
+.g-sph .glegend,.g-enc .glegend{font-size:11.5px;line-height:1.35;gap:3px}
+.g-sph .card-b.stack,.g-enc .card-b.stack{gap:10px}
+.g-enc .readout{padding:5px 0}
+.g-enc .readout .v{font-size:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <div style="flex:1 1 380px">
+      <p class="eyebrow"><a href="index.html">CH40051 Electroanalytical Chemistry</a> · Lecture 6 · Ion interactions</p>
+      <h1>Ion Interactions Bench</h1>
+      <p class="sub">No ion in a real solution is alone. Watch the atmosphere of counter-charge that every ion carries thin out as you dilute, and count what a Gaussian sphere around it encloses.</p>
+    </div>
+  </header>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" aria-selected="true"  aria-controls="p-fp"   id="t-fp">Field &amp; Potential</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="p-atm"  id="t-atm">Ion Atmosphere</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="p-quiz" id="t-quiz">Concept Check</button>
+  </div>
+
+  <!-- ============== FIELD AND POTENTIAL ============== -->
+  <section class="panel" id="p-fp" role="tabpanel" aria-labelledby="t-fp">
+
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-h"><h2>Potential and field, defined</h2><span class="note">E and &psi; side by side: what each one is, and how they differ</span></div>
+      <div class="card-b stack" style="gap:12px">
+        <div class="eqbig" style="white-space:normal">
+          <span class="dif">&psi; = U / q</span>
+          &nbsp;&nbsp;&middot;&nbsp;&nbsp;
+          <span class="mig">E = F / q</span>
+          &nbsp;&nbsp;&middot;&nbsp;&nbsp;
+          <span class="con">E = &minus;d&psi;/dx &nbsp;&hArr;&nbsp; &psi;(x) = &int;<sub>x</sub><sup>&infin;</sup> E dx</span>
+        </div>
+        <p class="hint" style="margin:0;font-size:14px">The <b>potential</b> &psi; is a scalar: one number at each point, like a height on a map.
+          The <b>field</b> E is how steeply that potential changes through space &mdash; its slope &mdash; and it points downhill.
+          <b>It is the field that pushes on a charge</b>; the potential gives the charge&rsquo;s energy.
+          Around <b>one ion</b> both fall off with distance; between <b>two electrodes</b> you set a voltage, but every ion in between
+          answers to the field, E = &Delta;V/d.</p>
+        <div style="overflow-x:auto">
+        <table class="ions fptab">
+          <thead><tr><th></th><th>Electric field, E</th><th>Electric potential, &psi;</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">What it is</th>
+              <td>The <b>force per unit charge</b> a small positive test charge would feel at that point.</td>
+              <td>The <b>work per unit charge</b> to bring a small positive test charge in from far away (where &psi; = 0) to that point: an energy per charge.</td></tr>
+            <tr><th scope="row">Kind and units</th>
+              <td>A <b>vector</b>, with a direction: outward from a cation. <span class="fx">V/m = N/C</span></td>
+              <td>A <b>scalar</b>, a single number at each point. <span class="fx">V = J/C</span></td></tr>
+            <tr><th scope="row">For a second ion, charge z<sub>j</sub>e, at r</th>
+              <td>the <b>force</b> on it: <span class="fx">F = z<sub>j</sub>e&middot;E</span></td>
+              <td>its <b>energy</b>: <span class="fx">U = z<sub>j</sub>e&middot;&psi;</span></td></tr>
+            <tr><th scope="row">What sets it</th>
+              <td><b>Gauss&rsquo;s law</b>: only the charge <b>inside</b> a sphere of radius r counts. <span class="fx">E&middot;4&pi;r<sup>2</sup> = Q<sub>enc</sub>/&epsilon;<sub>0</sub>&epsilon;<sub>r</sub></span></td>
+              <td><b>All</b> the charge, inside and outside r, since it sums the field all the way out. For the atmosphere this is the Poisson&ndash;Boltzmann equation.</td></tr>
+            <tr><th scope="row"><span style="color:var(--muted)">Ion alone</span></th>
+              <td><span class="fx">E = ze / 4&pi;&epsilon;<sub>0</sub>&epsilon;<sub>r</sub> r<sup>2</sup></span> &mdash; falls as 1/r<sup>2</sup></td>
+              <td><span class="fx">&psi; = ze / 4&pi;&epsilon;<sub>0</sub>&epsilon;<sub>r</sub> r</span> &mdash; falls as 1/r</td></tr>
+            <tr><th scope="row"><span style="color:var(--red-)">With its atmosphere</span></th>
+              <td><span class="fx">E = Q<sub>enc</sub>(r) / 4&pi;&epsilon;<sub>0</sub>&epsilon;<sub>r</sub> r<sup>2</sup></span>, with <span class="fx">Q<sub>enc</sub> = ze(1 + &kappa;r)e<sup>&minus;&kappa;(r&minus;a)</sup>/(1 + &kappa;a)</span> &mdash; dies away as e<sup>&minus;&kappa;r</sup></td>
+              <td><span class="fx">&psi; = (ze / 4&pi;&epsilon;<sub>0</sub>&epsilon;<sub>r</sub>) &middot; e<sup>&kappa;a</sup>/(1 + &kappa;a) &middot; e<sup>&minus;&kappa;r</sup>/r</span> &mdash; dies away as e<sup>&minus;&kappa;r</sup></td></tr>
+            <tr><th scope="row">Where to see it</th>
+              <td><b>What the sphere encloses</b> (Ion Atmosphere tab): the curve Q<sub>enc</sub> and the readout &ldquo;field on the sphere&rdquo;; and the field arrows in the pictures below.</td>
+              <td><b>How far the charge is felt</b> (Ion Atmosphere tab): the graph, as &psi;(r)/&psi;(a); and the <b>One ion</b> picture below.</td></tr>
+          </tbody>
+        </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="fpgrid">
+
+      <div class="card">
+        <div class="card-h"><h2>One ion</h2><span class="note" id="fpiNote">&mdash;</span></div>
+        <div class="card-b stack fpbody">
+          <div class="fpctl">
+            <div>
+              <span class="fld">Around the ion</span>
+              <div class="pill-row" id="fpiAtm">
+                <button class="pill" data-a="0" aria-pressed="true"  type="button">alone</button>
+                <button class="pill" data-a="1" aria-pressed="false" type="button">+ atmosphere</button>
+              </div>
+            </div>
+            <p class="hint" style="margin:0">a cation, +e, in water; atmosphere at 0.1 M; closest approach a = 0.4 nm</p>
+          </div>
+          <div class="fpctl">
+            <div>
+              <span class="fld">Test charge</span>
+              <div class="pill-row" id="fpiSign">
+                <button class="pill" data-q="1"  aria-pressed="true"  type="button">+e</button>
+                <button class="pill" data-q="-1" aria-pressed="false" type="button">&minus;e</button>
+              </div>
+            </div>
+            <div>
+              <div class="slider-row"><span class="fld" style="margin:0">Where it starts</span><span class="val" id="fpiXv"></span></div>
+              <input type="range" id="fpiX" min="0" max="1000" step="1" value="100">
+            </div>
+          </div>
+          <div class="btnrow">
+            <button class="ghost" id="fpiPlay" type="button">&#9654; Let it go</button>
+            <button class="ghost" id="fpiReset" type="button">Put it back</button>
+          </div>
+          <svg id="fpipic" viewBox="0 0 520 430" style="display:block;width:100%;height:auto;max-width:520px;margin:0 auto" role="img" aria-label="Above, the space around a cation with equipotential circles, radial field arrows and a test charge; below, the potential and the field against distance, with the tangent at the charge"></svg>
+          <div>
+            <div class="readout"><span class="k"><span class="dif">potential there</span>, &psi;</span><span class="v" id="fpiPsi">&mdash;</span></div>
+            <div class="readout"><span class="k"><span class="mig">field there</span>, E = &minus;d&psi;/dx</span><span class="v" id="fpiE">&mdash;</span></div>
+            <div class="readout"><span class="k"><span class="con">force on it</span>, F = qE</span><span class="v" id="fpiF">&mdash;</span></div>
+            <div class="readout"><span class="k">its energy, U = q&psi;</span><span class="v" id="fpiU">&mdash;</span></div>
+            <div class="readout"><span class="k">work done by the field since it was let go</span><span class="v" id="fpiW">&mdash;</span></div>
+          </div>
+          <div id="fpiRead" class="verdict flat fpread">&mdash;</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-h"><h2>Two electrodes, an insulator between</h2><span class="note" id="fppNote">&mdash;</span></div>
+        <div class="card-b stack fpbody">
+          <div class="fpctl">
+            <div>
+              <div class="slider-row"><span class="fld" style="margin:0">Voltage, &Delta;V</span><span class="val" id="fppVv"></span></div>
+              <input type="range" id="fppV" min="0.2" max="2" step="0.05" value="1">
+            </div>
+            <div>
+              <div class="slider-row"><span class="fld" style="margin:0">Gap, d</span><span class="val" id="fppDv"></span></div>
+              <input type="range" id="fppD" min="1" max="10" step="0.5" value="5">
+            </div>
+          </div>
+          <div class="fpctl">
+            <div>
+              <span class="fld">Test charge</span>
+              <div class="pill-row" id="fppSign">
+                <button class="pill" data-q="1"  aria-pressed="true"  type="button">+e</button>
+                <button class="pill" data-q="-1" aria-pressed="false" type="button">&minus;e</button>
+              </div>
+            </div>
+            <div>
+              <div class="slider-row"><span class="fld" style="margin:0">Where it starts</span><span class="val" id="fppXv"></span></div>
+              <input type="range" id="fppX" min="0" max="1000" step="1" value="100">
+            </div>
+          </div>
+          <div class="btnrow">
+            <button class="ghost" id="fppPlay" type="button">&#9654; Let it go</button>
+            <button class="ghost" id="fppReset" type="button">Put it back</button>
+          </div>
+          <svg id="fpppic" viewBox="0 0 520 430" style="display:block;width:100%;height:auto;max-width:520px;margin:0 auto" role="img" aria-label="Above, the space between two electrodes with equipotential lines, field arrows and a test charge; below, the potential and the field across the gap, with the tangent at the charge"></svg>
+          <div>
+            <div class="readout"><span class="k"><span class="dif">potential there</span>, &psi;</span><span class="v" id="fppPsi">&mdash;</span></div>
+            <div class="readout"><span class="k"><span class="mig">field there</span>, E = &minus;d&psi;/dx</span><span class="v" id="fppE">&mdash;</span></div>
+            <div class="readout"><span class="k"><span class="con">force on it</span>, F = qE</span><span class="v" id="fppF">&mdash;</span></div>
+            <div class="readout"><span class="k">its energy, U = q&psi;</span><span class="v" id="fppU">&mdash;</span></div>
+            <div class="readout"><span class="k">work done by the field since it was let go</span><span class="v" id="fppW">&mdash;</span></div>
+          </div>
+          <div id="fppRead" class="verdict flat fpread">&mdash;</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <div class="card-h"><h2>How to read the two pictures</h2><span class="note">height, slope, push</span></div>
+      <div class="card-b stack" style="gap:14px">
+        <div class="trio3">
+          <p class="hint" style="margin:0"><b>1. Potential is a height.</b> &psi; is one number at each place, so it can be drawn as
+            shading and joined up into equipotentials, like contour lines. Only differences in &psi; matter: moving a charge q from one
+            line to another changes its energy by q&Delta;&psi;, whatever path it takes.</p>
+          <p class="hint" style="margin:0"><b>2. Field is the slope.</b> E = &minus;d&psi;/dx: steep where the equipotentials crowd,
+            gentle where they spread. Around one ion &psi; &prop; 1/r but E &prop; 1/r<sup>2</sup>, so the field dies away faster than
+            the potential; switch the atmosphere on and both are cut off beyond about 1/&kappa;. Between two electrodes &psi; falls in a
+            straight line, so E = &Delta;V/d is the same everywhere &mdash; halve the gap and the field doubles. Fill the gap with an electrolyte and that stops being true: see <b>Electrochemical cell</b> below.</p>
+          <p class="hint" style="margin:0"><b>3. The field pushes.</b> F = qE. A positive charge is pushed down the slope, toward
+            lower &psi;; a negative one is pushed <em>up</em> it. Both lose energy, because U = q&psi; falls either way. In solution an ion
+            does not accelerate for long: friction sets a drift speed proportional to E &mdash; the start of ionic conductivity in Lecture 8.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="rowhead rowsep">
+      <span class="tag">Electrochemical cell</span>
+      <h3>Two electrodes with an electrolyte between them</h3>
+      <span class="note">the ions move until the field sits in the double layers &mdash; KCl in water, electrodes 5 mm apart, 25 &deg;C</span>
+    </div>
+
+    <div class="two eq">
+
+      <div class="card">
+        <div class="card-h"><h2>The cell</h2><span class="note">switch on a voltage and watch where it goes</span></div>
+        <div class="card-b stack">
+          <div>
+            <span class="fld">What happens at the electrodes</span>
+            <div class="pill-row" id="ecCase">
+              <button class="pill" data-k="block" aria-pressed="true"  type="button">non-Faradaic</button>
+              <button class="pill" data-k="far"   aria-pressed="false" type="button">Faradaic reaction</button>
+              <button class="pill" data-k="ac"    aria-pressed="false" type="button">AC, 1 kHz</button>
+            </div>
+          </div>
+          <div>
+            <span class="fld">KCl concentration</span>
+            <div class="pill-row" id="ecC">
+              <button class="pill" data-c="1"   aria-pressed="false" type="button">1 mM</button>
+              <button class="pill" data-c="10"  aria-pressed="true"  type="button">10 mM</button>
+              <button class="pill" data-c="100" aria-pressed="false" type="button">100 mM</button>
+            </div>
+          </div>
+          <div>
+            <div class="slider-row"><span class="fld" style="margin:0">Voltage, &Delta;V</span><span class="val" id="ecVv"></span></div>
+            <input type="range" id="ecV" min="0.1" max="1" step="0.05" value="1">
+          </div>
+          <div>
+            <div class="slider-row"><span class="fld" style="margin:0" id="ecTf">Time since switching on</span><span class="val" id="ecTv"></span></div>
+            <input type="range" id="ecT" min="-10" max="-1" step="0.02" value="-10">
+          </div>
+          <div class="btnrow">
+            <button class="ghost" id="ecPlay" type="button">&#9654; Switch the voltage on</button>
+          </div>
+          <div>
+            <div class="readout"><span class="k">Debye length, 1/&kappa;</span><span class="v" id="ecL">&mdash;</span></div>
+            <div class="readout"><span class="k">conductivity, &sigma;</span><span class="v" id="ecS">&mdash;</span></div>
+            <div class="readout"><span class="k">bulk turns from insulator to conductor, &epsilon;/&sigma;</span><span class="v" id="ecTe">&mdash;</span></div>
+            <div class="readout"><span class="k">double layers charge, &tau; = R<sub>s</sub>C<sub>dl</sub></span><span class="v" id="ecTau">&mdash;</span></div>
+            <div class="readout"><span class="k"><span class="mig">field in the bulk</span> now</span><span class="v" id="ecEb">&mdash;</span></div>
+            <div class="readout"><span class="k"><span class="dif">voltage across each double layer</span> now</span><span class="v" id="ecVi">&mdash;</span></div>
+            <div class="readout"><span class="k"><span class="mig">field in the compact layer</span> now</span><span class="v" id="ecEh">&mdash;</span></div>
+            <div class="readout"><span class="k">current density now, j = &sigma;E<sub>bulk</sub></span><span class="v" id="ecJ">&mdash;</span></div>
+            <div class="readout"><span class="k"><span class="con">K<sup>+</sup> migration speed</span> in the bulk, v = uE</span><span class="v" id="ecU">&mdash;</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-h"><h2>Where the voltage goes</h2><span class="note" id="ecNote">&mdash;</span></div>
+        <div class="card-b stack">
+          <svg id="ecpic" viewBox="0 0 520 450" style="display:block;width:100%;height:auto;max-width:560px;margin:0 auto" role="img" aria-label="Across an electrochemical cell: the ions, the potential and the field strength on a log scale, with the double layers at each electrode magnified and the bulk squeezed between them"></svg>
+          <div class="glegend">
+          <span><svg viewBox="0 0 26 14" width="26" height="14" aria-hidden="true"><rect x="0" y="0" width="4" height="14" fill="var(--elec)"/><circle cx="10" cy="5" r="3" fill="var(--ink-2)"/><circle cx="19" cy="9" r="2.6" fill="none" stroke="var(--ink-2)" stroke-width="1.3"/></svg><span><b>strip on top</b>: the electrodes (dark bars), cations (filled) and anions (open). The crowd of one kind at each electrode is the diffuse layer&rsquo;s excess counter-charge; the small arrows in the bulk are migration.</span></span>
+          <span><svg viewBox="0 0 26 14" width="26" height="14" aria-hidden="true"><rect x="1" y="1" width="6" height="12" fill="var(--line-2)" opacity="0.6"/></svg><span><b>grey band</b>: the compact (Helmholtz) layer, 0.45 nm of oriented water, &epsilon;<sub>r</sub> &asymp; 10, with no ions in it.</span></span>
+          <span><svg viewBox="0 0 26 14" width="26" height="14" aria-hidden="true"><line x1="7" y1="2" x2="3" y2="12" stroke="var(--muted)" stroke-width="1.4"/><line x1="12" y1="2" x2="8" y2="12" stroke="var(--muted)" stroke-width="1.4"/></svg><span><b>broken axis</b>: the first and last few nanometres are magnified; the 5 mm of bulk between them is squeezed into the middle, and its field has its own scale (0&ndash;210 V/m, written inside it). Every field curve is the slope of the potential directly above it.</span></span>
+          </div>
+          <div id="ecRead" class="verdict flat">&mdash;</div>
+          <p class="hint" style="margin:0">Linear double layers (Debye&ndash;Hückel), so the numbers are sizes rather than predictions above a few tenths of a volt.
+            The Faradaic reaction is a fast couple at both electrodes, j<sub>0</sub> = 1 mA/cm<sup>2</sup>, with no mass-transport limit.</p>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <div class="card-h"><h2>Migration: the field is the driving force</h2><span class="note">why ions move through the bulk, and why they stop</span></div>
+      <div class="card-b stack" style="gap:12px">
+        <div class="eqbig" style="white-space:normal">
+          <span class="con">F = z<sub>i</sub>eE</span>
+          &nbsp;&nbsp;&middot;&nbsp;&nbsp;
+          <span class="mig">v<sub>i</sub> = u<sub>i</sub>E</span>
+          &nbsp;&nbsp;&middot;&nbsp;&nbsp;
+          <span class="dif">J<sub>mig,i</sub> = &minus;(z<sub>i</sub>F/RT) D<sub>i</sub>c<sub>i</sub> d&psi;/dx = (z<sub>i</sub>F/RT) D<sub>i</sub>c<sub>i</sub>E</span><br>
+          <small>the force on an ion &nbsp;&middot;&nbsp; its drift speed, with mobility u<sub>i</sub> = |z<sub>i</sub>|eD<sub>i</sub>/k<sub>B</sub>T &nbsp;&middot;&nbsp; the migration term of the Nernst&ndash;Planck flux</small>
+        </div>
+        <div class="trio3">
+          <p class="hint" style="margin:0"><b>1. The push is the field.</b> An ion of charge z<sub>i</sub>e feels F = z<sub>i</sub>eE. In water,
+            friction balances that force within picoseconds, so the ion does not keep accelerating: it drifts at v = u<sub>i</sub>E,
+            cations along E and anions against it. The migration flux is proportional to &minus;d&psi;/dx &mdash; the <b>slope</b> of
+            the potential, not the potential itself.</p>
+          <p class="hint" style="margin:0"><b>2. No slope, no migration.</b> With only non-Faradaic processes, ions migrate only until the double layers are
+            charged. Then the whole voltage sits across a few nanometres at each electrode, the bulk is flat, E = 0 there, and
+            migration through the bulk stops &mdash; although the electrodes are still &Delta;V apart. The same field, concentrated
+            in the double layer, is what holds the counter-ions against diffusion there.</p>
+          <p class="hint" style="margin:0"><b>3. Keep a current, keep a field.</b> A Faradaic reaction at the electrodes, or AC too fast for the
+            double layers to finish charging, keeps a field E = j/&sigma; in the bulk, and migration carries the current. That is the
+            field conductivity is measured in: j = &sigma;E with &sigma; = &Sigma;|z<sub>i</sub>|Fu<sub>i</sub>c<sub>i</sub> is Ohm&rsquo;s law,
+            migration summed over every ion &mdash; the subject of Lecture 8.</p>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ============== ION ATMOSPHERE AND SCREENING ============== -->
+  <section class="panel" id="p-atm" role="tabpanel" aria-labelledby="t-atm" hidden>
+
+    <div class="rowhead">
+      <span class="tag">Atmosphere</span>
+      <h3>The ion atmosphere, seen through Gauss&rsquo;s law</h3>
+      <span class="note">the counter-charge around one ion, and how much of the ion&rsquo;s charge a sphere around it still encloses</span>
+    </div>
+
+    <div class="atmgrid">
+
+      <div class="card g-atm">
+        <div class="card-h"><h2>The ion atmosphere</h2><span class="note">deck p.2&ndash;3 &mdash; no ion is ever alone</span></div>
+        <div class="card-b stack" style="gap:12px">
+          <div class="eqbig">
+            <span class="mig">1/&kappa; = &radic;( &epsilon;<sub>0</sub>&epsilon;<sub>r</sub> k<sub>B</sub>T / 2N<sub>A</sub>e<sup>2</sup>I )</span><br>
+            <small>Debye length, the thickness of the atmosphere</small>
+          </div>
+          <div class="atmfig">
+            <div class="atmmodel"><svg viewBox="0 0 360 300" style="display:block;width:100%;height:auto;max-width:320px;margin:0 auto" role="img" aria-label="Model of the ion atmosphere: a central ion, a counter-ion at the distance of closest approach a, the atmosphere extending one Debye length beyond a, and a point P at distance r where the potential psi(r) is read"><circle cx="150.0" cy="150.0" r="228.0" fill="var(--red-)" opacity="0.030"/><circle cx="150.0" cy="150.0" r="207.0" fill="var(--red-)" opacity="0.042"/><circle cx="150.0" cy="150.0" r="186.0" fill="var(--red-)" opacity="0.054"/><circle cx="150.0" cy="150.0" r="165.0" fill="var(--red-)" opacity="0.066"/><circle cx="150.0" cy="150.0" r="144.0" fill="var(--red-)" opacity="0.078"/><circle cx="150.0" cy="150.0" r="123.0" fill="var(--red-)" opacity="0.090"/><circle cx="150.0" cy="150.0" r="102.0" fill="var(--red-)" opacity="0.102"/><circle cx="150.0" cy="150.0" r="81.0" fill="var(--red-)" opacity="0.114"/><circle cx="150.0" cy="150.0" r="60.0" fill="var(--surface)" opacity="0.92"/><circle cx="150.0" cy="150.0" r="60.0" fill="var(--line-2)" opacity="0.35" stroke="var(--muted)" stroke-dasharray="3 3"/><circle cx="150.0" cy="150.0" r="140.0" fill="none" stroke="var(--red-)" stroke-width="1.4" stroke-dasharray="6 4"/><circle cx="55.4" cy="112.7" r="3" fill="var(--red-)" opacity="0.7"/><circle cx="58.1" cy="93.8" r="3" fill="var(--red-)" opacity="0.7"/><circle cx="70.8" cy="144.1" r="3" fill="var(--red-)" opacity="0.7"/><circle cx="183.0" cy="30.8" r="3" fill="var(--red-)" opacity="0.7"/><circle cx="125.8" cy="219.4" r="3" fill="var(--red-)" opacity="0.7"/><circle cx="176.8" cy="81.8" r="3" fill="var(--red-)" opacity="0.7"/><circle cx="279.6" cy="184.9" r="3" fill="var(--red-)" opacity="0.7"/><circle cx="54.7" cy="65.4" r="3" fill="var(--red-)" opacity="0.7"/><circle cx="252.5" cy="190.2" r="3" fill="var(--red-)" opacity="0.7"/><circle cx="154.0" cy="229.7" r="3" fill="var(--red-)" opacity="0.7"/><circle cx="82.1" cy="165.7" r="3" fill="var(--red-)" opacity="0.7"/><circle cx="205.2" cy="66.0" r="3" fill="var(--red-)" opacity="0.7"/><circle cx="80.7" cy="65.9" r="3" fill="var(--red-)" opacity="0.7"/><circle cx="94.2" cy="59.0" r="3" fill="var(--red-)" opacity="0.7"/><circle cx="132.0" cy="250.6" r="3" fill="var(--red-)" opacity="0.7"/><circle cx="161.4" cy="238.5" r="3" fill="var(--red-)" opacity="0.7"/><circle cx="28.9" cy="237.5" r="3" fill="var(--red-)" opacity="0.7"/><circle cx="19.2" cy="263.2" r="3" fill="var(--red-)" opacity="0.7"/><circle cx="323.2" cy="150.6" r="3" fill="var(--red-)" opacity="0.7"/><circle cx="218.6" cy="106.6" r="3" fill="var(--red-)" opacity="0.7"/><circle cx="172.0" cy="28.4" r="3" fill="var(--red-)" opacity="0.7"/><circle cx="258.8" cy="249.6" r="3" fill="var(--red-)" opacity="0.7"/><circle cx="76.5" cy="121.3" r="3" fill="var(--red-)" opacity="0.7"/><circle cx="186.9" cy="244.3" r="3" fill="var(--red-)" opacity="0.7"/><circle cx="246.4" cy="253.9" r="3" fill="var(--red-)" opacity="0.7"/><circle cx="243.6" cy="234.1" r="3" fill="var(--red-)" opacity="0.7"/><circle cx="172.8" cy="245.9" r="3" fill="var(--red-)" opacity="0.7"/><circle cx="251.4" cy="224.0" r="3" fill="var(--red-)" opacity="0.7"/><circle cx="78.1" cy="282.8" r="3" fill="var(--red-)" opacity="0.7"/><circle cx="86.4" cy="113.6" r="3" fill="var(--red-)" opacity="0.7"/><circle cx="82.8" cy="100.3" r="3" fill="var(--red-)" opacity="0.7"/><circle cx="60.0" cy="177.2" r="3" fill="var(--red-)" opacity="0.7"/><circle cx="144.7" cy="70.4" r="3" fill="var(--red-)" opacity="0.7"/><circle cx="228.4" cy="209.9" r="3" fill="var(--red-)" opacity="0.7"/><circle cx="218.3" cy="133.7" r="3" fill="var(--red-)" opacity="0.7"/><circle cx="126.6" cy="70.1" r="3" fill="var(--red-)" opacity="0.7"/><circle cx="187.8" cy="74.3" r="3" fill="var(--red-)" opacity="0.7"/><circle cx="118.0" cy="264.4" r="3" fill="var(--red-)" opacity="0.7"/><circle cx="135.4" cy="72.6" r="3" fill="var(--red-)" opacity="0.7"/><circle cx="159.7" cy="221.3" r="3" fill="var(--red-)" opacity="0.7"/><circle cx="218.3" cy="58.9" r="3" fill="var(--red-)" opacity="0.7"/><circle cx="127.1" cy="269.2" r="3" fill="var(--red-)" opacity="0.7"/><circle cx="141.7" cy="218.4" r="3" fill="var(--red-)" opacity="0.7"/><circle cx="243.8" cy="187.5" r="3" fill="var(--red-)" opacity="0.7"/><circle cx="35.5" cy="273.8" r="2.6" fill="var(--ox)" opacity="0.55"/><circle cx="291.0" cy="34.8" r="2.6" fill="var(--ox)" opacity="0.55"/><circle cx="312.1" cy="186.3" r="2.6" fill="var(--ox)" opacity="0.55"/><circle cx="282.9" cy="65.9" r="2.6" fill="var(--ox)" opacity="0.55"/><circle cx="350.8" cy="102.1" r="2.6" fill="var(--ox)" opacity="0.55"/><circle cx="46.7" cy="31.1" r="2.6" fill="var(--ox)" opacity="0.55"/><circle cx="319.3" cy="27.3" r="2.6" fill="var(--ox)" opacity="0.55"/><circle cx="333.4" cy="41.5" r="2.6" fill="var(--ox)" opacity="0.55"/><circle cx="150.0" cy="150.0" r="29" fill="none" stroke="var(--go)" stroke-width="1.2" stroke-dasharray="2 3"/><circle cx="150.0" cy="150.0" r="19" fill="var(--ox)" stroke="var(--surface)" stroke-width="2"/><text x="150.0" y="154.0" text-anchor="middle" fill="#fff" font-family="IBM Plex Mono,monospace" font-size="12" font-weight="700">+z</text><circle cx="107.6" cy="107.6" r="13" fill="var(--red-)" stroke="var(--surface)" stroke-width="2"/><text x="107.6" y="111.6" text-anchor="middle" fill="#fff" font-family="IBM Plex Mono,monospace" font-size="12" font-weight="700">&#8722;</text><line x1="150.0" y1="150.0" x2="107.6" y2="107.6" stroke="var(--ink)" stroke-width="2"/><text x="112.0" y="146.0" text-anchor="middle" fill="var(--ink)" font-family="IBM Plex Mono,monospace" font-size="16" font-weight="700" paint-order="stroke" stroke="var(--surface)" stroke-width="4" stroke-linejoin="round">a</text><line x1="210.0" y1="150.0" x2="290.0" y2="150.0" stroke="var(--red-)" stroke-width="2"/><line x1="210.0" y1="144.0" x2="210.0" y2="156.0" stroke="var(--red-)" stroke-width="2"/><line x1="290.0" y1="144.0" x2="290.0" y2="156.0" stroke="var(--red-)" stroke-width="2"/><text x="250.0" y="141.0" text-anchor="middle" fill="var(--red-)" font-family="IBM Plex Mono,monospace" font-size="15" font-weight="700" paint-order="stroke" stroke="var(--surface)" stroke-width="4" stroke-linejoin="round">1/&#954;</text><text x="256.0" y="52.0" text-anchor="start" fill="var(--red-)" font-family="IBM Plex Mono,monospace" font-size="13" font-weight="700" paint-order="stroke" stroke="var(--surface)" stroke-width="4" stroke-linejoin="round">a + 1/&#954;</text><line x1="150.0" y1="150.0" x2="252.2" y2="209.0" stroke="var(--ink-2)" stroke-width="1.6" stroke-dasharray="5 3"/><text x="190.0" y="199.0" text-anchor="middle" fill="var(--ink)" font-family="IBM Plex Mono,monospace" font-size="16" font-weight="700" paint-order="stroke" stroke="var(--surface)" stroke-width="4" stroke-linejoin="round">r</text><circle cx="252.2" cy="209.0" r="5" fill="var(--ink)"/><text x="261.2" y="214.0" text-anchor="start" fill="var(--ink)" font-family="IBM Plex Mono,monospace" font-size="15" font-weight="700" paint-order="stroke" stroke="var(--surface)" stroke-width="4" stroke-linejoin="round">P: &#968;(r)</text></svg></div>
+            <p class="hint" style="margin:0">Every cation drags a
+            time-averaged excess of anions around with it, and every anion an excess of cations &mdash; the <b>ion atmosphere</b>.
+            It is not a shell of particular ions; it is a statistical bias, rebuilt continuously as the central ion moves.
+            The rebuilding takes time, so a moving ion leaves more of its counter-charge behind than it gathers ahead.
+            The atmosphere&rsquo;s charge distribution becomes <b>asymmetric</b>, and that lopsided counter-charge pulls the ion
+            backward by <b>electrostatic attraction</b>: the <b>relaxation</b> or <b>asymmetry effect</b>.<br><br>
+            Its thickness is the <b>Debye length</b> 1/&kappa;. Note what is in it and what is not: concentration and charge
+            through I, the solvent through &epsilon;<sub>r</sub>, temperature &mdash; but nothing about which salt. Two solutions of
+            equal ionic strength screen equally. Why the atmosphere has exactly this thickness is <b>Gauss&rsquo;s law</b> &mdash; the cards beside this one.</p>
+            <div class="atmdefs">
+              <div><span class="sym" style="color:var(--ox)">+z</span><span>the <b>central ion</b>, charge ze; green dots, its hydration shell</span></div>
+              <div><span class="sym">a</span><span><b>closest approach</b>: the nearest another ion&rsquo;s centre can come. No atmosphere inside it (grey).</span></div>
+              <div><span class="sym">r</span><span>distance from the ion&rsquo;s centre to a point <b>P</b></span></div>
+              <div><span class="sym">&#968;(r)</span><span><b>potential at P</b>, from ion and atmosphere together: &#968; = (ze/4&pi;&epsilon;<sub>0</sub>&epsilon;<sub>r</sub>)&middot;e<sup>&#954;a</sup>/(1+&#954;a)&middot;e<sup>&minus;&#954;r</sup>/r, for r &ge; a</span></div>
+              <div><span class="sym" style="color:var(--red-)">1/&#954;</span><span><b>Debye length</b>: how far beyond a the excess counter-charge reaches. At a + 1/&#954;, &#968; is 1/e of the bare ion&rsquo;s.</span></div>
+              <div><span class="sym" style="color:var(--red-)">&#954;</span><span>&#954;<sup>2</sup> = 2N<sub>A</sub>e<sup>2</sup>I / &#949;<sub>0</sub>&#949;<sub>r</sub>k<sub>B</sub>T &mdash; large &#954;, thin atmosphere</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card g-sph">
+        <div class="card-h"><h2>The Gaussian sphere</h2><span class="note" id="gsNote">&mdash;</span></div>
+        <div class="card-b stack">
+          <p class="hint" style="margin:0"><b>Gauss&rsquo;s law:</b> the divergence of the electric field is determined by the charge density.</p>
+          <svg id="gspic" viewBox="0 0 400 400" style="display:block;width:100%;height:auto;max-width:250px;margin:0 auto" role="img" aria-label="A central ion with its ion atmosphere drawn as a cloud of counter-charge, a dashed Gaussian sphere around it, and field lines crossing the sphere in proportion to the charge it encloses"></svg>
+          <div class="glegend">
+            <span><svg viewBox="0 0 26 14" width="26" height="14" aria-hidden="true"><circle cx="13" cy="7" r="6" fill="var(--ox)"/></svg>the central ion, drawn to its radius a</span>
+            <span><svg viewBox="0 0 26 14" width="26" height="14" aria-hidden="true"><circle cx="13" cy="7" r="3.3" fill="var(--red-)"/></svg>counter-charge: the ion atmosphere &mdash; the blue haze shows how dense it is</span>
+            <span><svg viewBox="0 0 26 14" width="26" height="14" aria-hidden="true"><line x1="1" y1="7" x2="25" y2="7" stroke="var(--ox)" stroke-width="1.8" stroke-dasharray="5 4"/></svg>a field line leaving the ion &mdash; 24 are drawn, one for each 1/24 of its charge</span>
+            <span><svg viewBox="0 0 26 14" width="26" height="14" aria-hidden="true"><line x1="1" y1="7" x2="17" y2="7" stroke="var(--ox)" stroke-width="1.8" stroke-dasharray="5 4" opacity="0.35"/><circle cx="20" cy="7" r="2.2" fill="var(--red-)"/></svg>a faint line: it ended on counter-charge before reaching the sphere</span>
+            <span><svg viewBox="0 0 26 14" width="26" height="14" aria-hidden="true"><circle cx="13" cy="7" r="5.5" fill="none" stroke="var(--sph)" stroke-width="2" stroke-dasharray="4 3"/></svg>the <b class="sph">purple</b> Gaussian sphere, radius r &mdash; the slider sets it, &#9654; grows it from the ion outward</span>
+            <span><svg viewBox="0 0 26 14" width="26" height="14" aria-hidden="true"><line x1="1" y1="7" x2="25" y2="7" stroke="var(--sph)" stroke-width="1.5" stroke-dasharray="4 3"/><circle cx="13" cy="7" r="3" fill="var(--ox)"/></svg>an orange dot on the circle: a line that crosses the sphere</span>
+            <span style="display:block;color:var(--muted)">The dots drift and the dashes flow only to show a living solution; nothing is computed from that motion.</span>
+          </div>
+          <div style="margin-top:1em">
+            <span class="fld">What is around the ion</span>
+            <div class="pill-row" id="gsMode">
+              <button class="pill" data-m="bare" aria-pressed="false" type="button">bare ion, vacuum-like</button>
+              <button class="pill" data-m="atm"  aria-pressed="true"  type="button">ion + atmosphere</button>
+            </div>
+          </div>
+          <div>
+            <div class="slider-row"><span class="fld" style="margin:0">Sphere radius, r</span><span class="val" id="gsRv"></span></div>
+            <input type="range" id="gsR" min="0" max="1000" step="1" value="200">
+          </div>
+          <p class="hint" style="margin:0">Salt, concentration, solvent and temperature come from <b>The solution</b>, further down this tab.</p>
+          <div class="btnrow">
+            <button class="ghost" id="gsPlay" type="button">&#9654; Grow the sphere</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card g-enc">
+        <div class="card-h"><h2>What the sphere encloses</h2><span class="note">and so how strong the field is on it</span></div>
+        <div class="card-b stack">
+          <p class="hint" style="margin:0"><b>What Q<sub>enc</sub> is.</b>&nbsp;The net charge inside the sphere: the ion&rsquo;s own charge plus the counter-charge of the atmosphere that lies within r.</p>
+          <svg id="gsplot" viewBox="0 0 360 250" style="display:block;width:100%;height:auto;max-width:330px;margin:0 auto" role="img" aria-label="Net charge enclosed by a sphere around the ion against its radius, falling from the full ion charge to zero over a few Debye lengths, with the bare ion's constant charge for comparison"></svg>
+          <div class="glegend">
+            <span><svg viewBox="0 0 26 14" width="26" height="14" aria-hidden="true"><rect x="1" y="1" width="10" height="12" fill="var(--line-2)" opacity="0.5"/></svg><span><b>grey</b>: the band on the left is inside the ion (r &lt; a).</span></span>
+            <span><svg viewBox="0 0 26 14" width="26" height="14" aria-hidden="true"><path d="M1 13 Q8 1 25 12 L25 13 Z" fill="var(--red-)" opacity="0.25"/><circle cx="8" cy="5" r="2.5" fill="var(--red-)"/></svg><span><b>shaded hump</b>: how much counter-charge sits in a thin shell at each r. Its <b>peak (dot) is at r = 1/&kappa;</b> from the centre.</span></span>
+            <span><svg viewBox="0 0 26 14" width="26" height="14" aria-hidden="true"><line x1="13" y1="0" x2="13" y2="14" stroke="var(--ox)" stroke-width="1.5"/></svg><span><b>orange line, r = a + 1/&kappa;</b>: the edge of the atmosphere, a further out than &#9313; (r = 1/&kappa;). In dilute solution a &#8810; 1/&kappa;, so the two nearly coincide on this scale.</span></span>
+          </div>
+          <div>
+            <div class="readout"><span class="k">sphere radius, r</span><span class="v" id="gsRr">&mdash;</span></div>
+            <div class="readout"><span class="k"><span class="sph">net charge inside</span>, Q<sub>enc</sub> / ze</span><span class="v" id="gsQ">&mdash;</span></div>
+            <div class="readout"><span class="k"><span class="mig">field on the sphere</span>, E = Q<sub>enc</sub>/4&pi;&epsilon;<sub>0</sub>&epsilon;<sub>r</sub>r<sup>2</sup></span><span class="v" id="gsE">&mdash;</span></div>
+          </div>
+          <div id="gsVerdict" class="verdict flat">
+            <span style="display:block">&bull; <b>r = a:</b> only the ion is inside, so Q<sub>enc</sub> = ze &mdash; all 24 lines cross.</span>
+            <span style="display:block">&bull; <b>r grows:</b> more and more counter-charge of the opposite sign comes inside, so Q<sub>enc</sub> falls.</span>
+            <span style="display:block">&bull; <b>r &rarr; &infin;:</b> the whole atmosphere carries exactly &minus;ze, so Q<sub>enc</sub> &rarr; 0 &mdash; ion and atmosphere together are neutral.</span>
+          </div>
+          <div id="gsRead" class="verdict flat">&mdash;</div>
+        </div>
+      </div>
+
+      <div class="card g-gauss">
+        <div class="card-h"><h2>Where 1/&kappa; comes from: Gauss&rsquo;s law, read off the two figures</h2><span class="note">deck p.11</span></div>
+        <div class="card-b stack" style="gap:12px">
+          <div class="trio3">
+            <p class="hint" style="margin:0"><b>1. Gauss&rsquo;s law.</b> Count the field lines that cross a sphere drawn
+              around the ion: the count tells you the charge inside it, Q<sub>enc</sub>. A bare ion has nothing around it,
+              so all 24 lines cross, however big the sphere.</p>
+            <p class="hint" style="margin:0"><b>2. Add the atmosphere.</b> It carries the opposite charge. As the sphere grows it
+              takes in more of it, so more lines end inside and fewer cross. <b>&#9312;</b> r = a: all 24 cross.
+              <b>&#9313;</b> r = 1/&kappa;: the count falls fastest. <b>&#9314;</b> about 6/&kappa; out: none cross.</p>
+            <p class="hint" style="margin:0"><b>3. So what is 1/&kappa;?</b> The distance over which the atmosphere cancels the
+              ion&rsquo;s charge. Beyond a few 1/&kappa; the ion is hidden. More salt packs the atmosphere closer, so
+              1/&kappa; gets shorter.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="rowhead rowsep">
+      <span class="tag">Screening</span>
+      <h3>The potential around one ion, inside its atmosphere</h3>
+      <span class="note">&#968;(r) from <b>The ion atmosphere</b> card, against the bare ion &mdash; the solution chosen here also sets every figure above</span>
+    </div>
+
+    <div class="trio3">
+
+      <div class="card">
+        <div class="card-h"><h2>The solution</h2><span class="note">what sets the screening</span></div>
+        <div class="card-b stack">
+          <div>
+            <span class="fld">Salt</span>
+            <div class="pill-row" id="atSalt">
+              <button class="pill" data-s="NaCl"  aria-pressed="true"  type="button">NaCl 1:1</button>
+              <button class="pill" data-s="CaCl2" aria-pressed="false" type="button">CaCl₂ 2:1</button>
+              <button class="pill" data-s="MgSO4" aria-pressed="false" type="button">MgSO₄ 2:2</button>
+              <button class="pill" data-s="LaCl3" aria-pressed="false" type="button">LaCl₃ 3:1</button>
+            </div>
+          </div>
+          <div>
+            <div class="slider-row"><span class="fld" style="margin:0">Concentration</span><span class="val" id="atCv"></span></div>
+            <input type="range" id="atC" min="-4" max="0.3" step="0.02" value="-2">
+          </div>
+          <div>
+            <span class="fld">Solvent</span>
+            <div class="pill-row" id="atSolv">
+              <button class="pill" data-e="78.4" aria-pressed="true"  type="button">water 78</button>
+              <button class="pill" data-e="32.7" aria-pressed="false" type="button">MeOH 33</button>
+              <button class="pill" data-e="7.58" aria-pressed="false" type="button">THF 7.6</button>
+            </div>
+          </div>
+          <div>
+            <div class="slider-row"><span class="fld" style="margin:0">Temperature</span><span class="val" id="atTv"></span></div>
+            <input type="range" id="atT" min="273" max="353" step="1" value="298">
+          </div>
+          <div class="btnrow">
+            <button class="ghost" id="atA" type="button">Analytical, 0.1 M</button>
+            <button class="ghost" id="atB" type="button">Very dilute, 0.1 mM</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-h"><h2>The numbers</h2></div>
+        <div class="card-b">
+          <div class="readout"><span class="k">ionic strength, I</span><span class="v" id="atI">&mdash;</span></div>
+          <div class="readout"><span class="k"><span class="mig">Debye length</span>, 1/&kappa;</span><span class="v" id="atL">&mdash;</span></div>
+          <div class="readout" style="border-bottom:3px double var(--line-2)"><span class="k">effective ion size, a</span><span class="v" id="atA2">&mdash;</span></div>
+          <div class="readout"><span class="k" style="color:var(--ox)">orange line, r = a + 1/&kappa;</span><span class="v" id="atRk">&mdash;</span></div>
+          <div class="readout"><span class="k"><span style="color:var(--muted)">ion alone</span> there, &psi;/&psi;(a)</span><span class="v" id="atPb">&mdash;</span></div>
+          <div class="readout"><span class="k"><span class="mig">with its atmosphere</span> there, &psi;/&psi;(a)</span><span class="v" id="atPs">&mdash;</span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-h"><h2>How far the charge is felt</h2></div>
+        <div class="card-b"><svg id="atplot" viewBox="0 0 400 340" style="display:block;width:100%;height:auto;max-width:420px;margin:0 auto" role="img" aria-label="The screened potential around a central ion against distance, with the bare Coulomb potential for comparison and the Debye length marked"></svg>
+          <div id="atRead" class="verdict flat" style="margin-top:12px">&mdash;</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <div class="card-h"><h2>How to read the graph</h2><span class="note">what &psi;(r)/&psi;(a) against r is showing</span></div>
+      <div class="card-b stack" style="gap:12px">
+        <div class="eqbig" style="white-space:normal;font-size:14px;line-height:1.7">
+          <small style="display:block;margin-bottom:4px">y-axis: the <b>potential</b> &psi;(r) at distance r from the central ion, made by the ion and its atmosphere together, divided by its value at r = a</small>
+          <div style="overflow-x:auto;margin:4px 0">
+          <table class="ions psitab">
+            <thead><tr><th></th><th>&psi;(r)</th><th>&psi;(a)</th><th>&psi;(r) / &psi;(a) &mdash; plotted</th></tr></thead>
+            <tbody>
+              <tr><th scope="row" style="color:var(--muted)">ion alone</th>
+                <td>ze / 4&pi;&epsilon;<sub>0</sub>&epsilon;<sub>r</sub> &middot; 1/r</td>
+                <td>ze / 4&pi;&epsilon;<sub>0</sub>&epsilon;<sub>r</sub> &middot; 1/a</td>
+                <td><b>a/r</b></td></tr>
+              <tr><th scope="row" style="color:var(--red-)">with its atmosphere</th>
+                <td>ze / 4&pi;&epsilon;<sub>0</sub>&epsilon;<sub>r</sub> &middot; e<sup>&kappa;a</sup>/(1 + &kappa;a) &middot; e<sup>&minus;&kappa;r</sup>/r</td>
+                <td>ze / 4&pi;&epsilon;<sub>0</sub>&epsilon;<sub>r</sub> &middot; 1/[a(1 + &kappa;a)]</td>
+                <td><b>(a/r) &middot; e<sup>&minus;&kappa;(r&minus;a)</sup></b></td></tr>
+            </tbody>
+          </table>
+          </div>
+          <small style="display:block;margin-top:4px">Dividing &psi;(r) by &psi;(a) cancels ze/4&pi;&epsilon;<sub>0</sub>&epsilon;<sub>r</sub> (and, with the atmosphere, 1/(1 + &kappa;a)), so both curves start at 1 at r = a. The last column is what the graph plots.</small>
+        </div>
+        <div class="trio3">
+          <p class="hint" style="margin:0"><b>What is plotted.</b> The potential &psi; around one ion against the distance r
+            from its centre, scaled so both curves start at 1 at r = a. <b>Grey strip (r &lt; a):</b> no other ion can get this close.</p>
+          <p class="hint" style="margin:0"><b>The two curves.</b> <span style="color:var(--muted)">Grey dashed</span>: the ion
+            alone, &psi; &prop; 1/r &mdash; it fades slowly. <span style="color:var(--red-)">Blue</span>: the same ion inside its
+            atmosphere &mdash; it fades much faster. <b>The gap between them is the screening.</b></p>
+          <p class="hint" style="margin:0"><b>The orange line, r = a + 1/&kappa;</b> (the thickness of the atmosphere). Here the blue curve is only
+            <b>37 %</b> (1/e) of the grey one, and <b>63 %</b> is screened.</p>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ============== CONCEPT CHECK ============== -->
+  <section class="panel" id="p-quiz" role="tabpanel" aria-labelledby="t-quiz" hidden>
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-h">
+        <h2>Concept check</h2>
+        <span class="note">Answer once per question — the reasoning appears immediately</span>
+        <span class="tally" style="margin-left:auto" id="tally"></span>
+      </div>
+      <div class="card-b">
+        <div class="idgrid">
+          <div>
+            <label class="fld" for="sId">Student ID</label>
+            <input type="text" id="sId" inputmode="numeric" placeholder="e.g. 20261234">
+          </div>
+        </div>
+        <p class="hint" id="idHint"></p>
+      </div>
+      <div class="scorebar" id="scorebar" hidden>
+        <div>
+          <div class="scorenum" id="scoreNum">—</div>
+          <div class="vcode" style="margin-top:4px" id="whoLine">—</div>
+        </div>
+        <div style="flex:1 1 300px">
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="solid" id="sendBtn" type="button" hidden>Submit to the course</button>
+            <button class="ghost" id="dlBtn" type="button">Download my result</button>
+          </div>
+          <p class="hint" id="dlHint" style="margin-top:8px">Download the file and hand it in as your instructor directs.</p>
+        </div>
+      </div>
+    </div>
+    <div class="quiz" id="quiz"></div>
+  </section>
+
+  <footer>
+    Debye lengths are derived from the physical constants rather than quoted · water at 25 °C unless another solvent is chosen · relative permittivities at room temperature<br>
+    CH40051 Electroanalytical Chemistry · Fall 2026 — companion to Lecture 6
+  </footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function sig(x,d){
+  if(x===0) return "0";
+  var e=Math.floor(Math.log10(Math.abs(x)));
+  if(e>=5||e<=-3) return x.toExponential(d-1);
+  return (+x.toPrecision(d)).toString();
+}
+
+/* ---------------- tabs ---------------- */
+var tabs=[].slice.call(document.querySelectorAll(".tab"));
+tabs.forEach(function(t){
+  t.addEventListener("click",function(){
+    tabs.forEach(function(o){
+      var on=(o===t);
+      o.setAttribute("aria-selected",on?"true":"false");
+      document.getElementById(o.getAttribute("aria-controls")).hidden=!on;
+    });
+  });
+});
+
+/* ================= CONCEPT CHECK ================= */
+var QZ=[
+ {q:"Two solutions are made up: 0.10 m (mol/kg) NaCl and 0.10 m (mol/kg) MgSO₄. Which has the thicker ion atmosphere?",
+  o:["NaCl — its ionic strength is 0.10 m (mol/kg) against 0.40 m (mol/kg) for MgSO₄, and 1/κ goes as 1/√I",
+     "MgSO₄ — the doubly charged ions attract more counter-charge",
+     "They are the same — both are 0.10 m (mol/kg)",
+     "MgSO₄ — sulfate is the larger ion"],
+  a:0,
+  w:"Ionic strength is I = ½Σcz², so charge enters <b>squared</b>. NaCl gives ½(0.1·1 + 0.1·1) = 0.10 m (mol/kg); MgSO₄ gives ½(0.1·4 + 0.1·4) = 0.40 m (mol/kg). The Debye length goes as I<sup>−½</sup>, so MgSO₄ screens twice as tightly at the same molality. This is why ionic strength, not concentration, is the variable in every equation on this page."},
+
+ {q:"For 0.10 m NaCl the Debye–Hückel limiting law predicts γ± = 0.69, but the measured value is 0.78. What is the single most likely reason?",
+  o:["The temperature was wrong",
+     "The solution is too concentrated for point charges — the ions have a size the law ignores",
+     "The law only works for salts of unequal charge",
+     "The measurement is wrong; the limiting law is exact"],
+  a:1,
+  w:"The limiting law is exact only as I → 0, where the atmosphere stands many ion diameters away. At 0.1 m the Debye length is about 1 nm, only a few times a hydrated ion, yet the law still lets the atmosphere crowd right up to a point charge — it overstates the stabilisation, so γ± reads <b>low</b>. Giving the ion a size a, the extended law, holds the atmosphere off and raises γ±: with a ≈ 4 Å it gives 0.77, close to the 0.78 measured. Mind the direction: every size correction raises γ± above the limiting law, so a measured value <em>below</em> the limiting-law prediction could not be blamed on ion size."},
+
+ {q:"For NaCl, γ± falls to a minimum near 1 m and then <b>rises</b>, passing 1.0 by about 6 m. Can electrostatics alone explain the rise?",
+  o:["Yes — the atmosphere eventually repels",
+     "Yes — at high concentration the ions screen each other completely",
+     "No — screening can only lower γ±; the rise comes from hydration taking water out of circulation",
+     "No — the measurement drifts at high concentration"],
+  a:2,
+  w:"Every electrostatic term is negative: an atmosphere stabilises the ion and drives log γ± down. The upturn is the <b>solvent</b> running out. Each ion holds several water molecules, so at high molality the free water that acts as solvent is much less than the total, the effective concentration is higher than the nominal one, and γ± climbs. That is what the +cI term of Robinson–Stokes is, and why it is linear in I rather than in √I."},
+
+ {q:"Li⁺ has the smallest crystal radius of Li⁺, Na⁺ and K⁺ but the largest hydrated radius. Why?",
+  o:["Lithium's atomic mass is lowest, so it moves faster",
+     "Its charge is spread over the smallest surface, so it binds and carries the most water",
+     "Lithium ions form covalent bonds with water",
+     "The crystal measurement is unreliable for light ions"],
+  a:1,
+  w:"Charge density, not charge, decides how strongly an ion holds solvent. Li⁺ concentrates its single charge into the smallest volume of the three, so it binds the most water and moves as the bulkiest object — which is why it also diffuses the most slowly. The a that makes the extended law fit activity data is this hydrated size, which is why it is fitted rather than looked up."},
+
+ {q:"The Bjerrum length in water at 25 °C is 0.71 nm, so a 1:1 salt pairs below q = 0.36 nm. What happens to q in tetrahydrofuran, εr = 7.6?",
+  o:["It falls, because the solvent is less polar",
+     "It is unchanged — q depends only on the ions",
+     "It rises about tenfold, to roughly 3.7 nm, so almost every pair counts as associated",
+     "It becomes undefined below εr = 10"],
+  a:2,
+  w:"q goes as 1/εr, so dropping from 78 to 7.6 multiplies it by about ten. Almost no pair of ions can stay further apart than 3.7 nm at any reasonable concentration, so a salt that is fully dissociated in water is largely ion-paired in THF. This is why non-aqueous electrochemistry needs its own supporting electrolytes, chosen for large, weakly coordinating ions that cannot approach closely."},
+
+ {q:"You measure a redox potential in 0.5 M KCl and again in 0.005 M KCl, and the two disagree by tens of millivolts. What is the most likely cause?",
+  o:["The reference electrode has failed",
+     "Activity coefficients differ between the two ionic strengths, and the Nernst equation runs on activity",
+     "Temperature drifted between the measurements",
+     "The analyte decomposed at the higher concentration"],
+  a:1,
+  w:"The Nernst equation is written in <b>activities</b>. Using concentrations is an approximation that is only safe when γ is the same in both cases, and γ± for KCl is about 0.65 at 0.5 M against 0.93 at 0.005 M. That is why potentials are quoted with the supporting electrolyte specified, and why a fixed ionic strength is held across a series of measurements: it does not make γ equal 1, but it makes it the same throughout, so the error becomes a constant offset rather than a drift."}
+];
+
+var LETTERS="ABCD", STORE="ch40051-l6-check-v1";
+var picks=new Array(QZ.length).fill(-1);
+var sId=document.getElementById("sId"), elTally=document.getElementById("tally"),
+    elBar=document.getElementById("scorebar"), elScore=document.getElementById("scoreNum"),
+    elWho=document.getElementById("whoLine"), elIdHint=document.getElementById("idHint"),
+    dlBtn=document.getElementById("dlBtn"), dlHint=document.getElementById("dlHint");
+var startedAt=null, finishedAt=null;
+
+function save(){
+  try{ localStorage.setItem(STORE,JSON.stringify({i:sId.value,p:picks,s:startedAt,t:finishedAt})); }catch(e){}
+}
+function loadState(){
+  try{
+    var d=JSON.parse(localStorage.getItem(STORE)||"null");
+    if(d){ sId.value=d.i||""; if(Array.isArray(d.p)&&d.p.length===QZ.length) picks=d.p.slice();
+           startedAt=d.s||null; finishedAt=d.t||null; }
+  }catch(e){}
+}
+function started(){ return picks.some(function(p){return p>=0;}); }
+function code(str){
+  var h=0x811c9dc5;
+  for(var i=0;i<str.length;i++){ h^=str.charCodeAt(i); h=(h+((h<<1)+(h<<4)+(h<<7)+(h<<8)+(h<<24)))>>>0; }
+  return ("0000000"+h.toString(16).toUpperCase()).slice(-8);
+}
+function scoreOf(){ var s=0; for(var i=0;i<QZ.length;i++) if(picks[i]===QZ[i].a) s++; return s; }
+function answered(){ return picks.filter(function(p){return p>=0;}).length; }
+
+function receipt(){
+  var s=scoreOf(), pct=Math.round(s/QZ.length*100), id=(sId.value||"").trim();
+  var stamp=finishedAt||new Date().toISOString();
+  var vc=code(id+"|"+stamp+"|"+picks.join(""));
+  var head=["lecture","student_id","completed_utc","score","total","percent","verification"];
+  var row=["L5",id,stamp,s,QZ.length,pct,vc];
+  for(var i=0;i<QZ.length;i++){ head.push("a"+(i+1)); row.push(picks[i]>=0?LETTERS[picks[i]]:"-"); }
+  for(var j=0;j<QZ.length;j++){ head.push("ok"+(j+1)); row.push(picks[j]===QZ[j].a?1:0); }
+  function cell(v){ v=String(v); return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; }
+  return {csv:head.join(",")+"\n"+row.map(cell).join(",")+"\n", vcode:vc, score:s, pct:pct, id:id};
+}
+
+function render(){
+  var done=answered(), all=(done===QZ.length);
+  elTally.textContent=done+" / "+QZ.length+" answered";
+  elBar.hidden=!all;
+  sId.readOnly=started();
+  elIdHint.innerHTML = all
+    ? "<strong>Attempt complete.</strong> Your answers are final. Every question now shows the correct answer and why — read them before you close this page."
+    : started() ? "<strong>Attempt in progress.</strong><span class=\"locked\">ID locked</span><br>Each answer is final."
+                : "<strong>One attempt.</strong> Enter your student ID before you begin — it locks once you answer the first question.";
+  if(all){
+    if(!finishedAt){ finishedAt=new Date().toISOString(); save(); }
+    var r=receipt();
+    elScore.innerHTML=r.score+' <small>/ '+QZ.length+'  ·  '+r.pct+' %</small>';
+    elWho.innerHTML="Student ID <b>"+esc(r.id||"—")+"</b> &nbsp;·&nbsp; Verification <b>"+r.vcode+"</b>";
+  }
+  for(var i=0;i<QZ.length;i++){
+    var box=document.querySelector('.opts[data-q="'+i+'"]');
+    var kids=[].slice.call(box.children), why=box.parentNode.querySelector(".why");
+    if(picks[i]<0){ kids.forEach(function(o){o.disabled=false;o.className="opt";}); why.hidden=true; }
+    else{
+      (function(qi){ kids.forEach(function(o,j){
+        o.disabled=true;
+        o.className="opt"+(j===QZ[qi].a?" right":(j===picks[qi]?" wrong":""));
+      }); })(i);
+      var _note=(picks[i]!==QZ[i].a)
+        ? '<span class="misc">You chose <b>'+LETTERS[picks[i]]+'</b>. '
+          + 'The correct answer is <b>'+LETTERS[QZ[i].a]+'</b>.</span>'
+        : "";
+      why.innerHTML=_note+QZ[i].w; why.hidden=false;
+    }
+  }
+}
+
+document.getElementById("quiz").innerHTML=QZ.map(function(item,i){
+  return '<div class="card q"><div class="card-b">'
+    +'<p class="stem"><b style="font-family:IBM Plex Mono,monospace;color:var(--muted);font-size:12px">Q'+(i+1)+'</b>  '+item.q+'</p>'
+    +'<div class="opts" data-q="'+i+'">'+item.o.map(function(o,j){
+        return '<button class="opt" data-i="'+j+'"><span class="ltr">'+LETTERS[j]+'</span><span>'+o+'</span></button>';
+      }).join("")+'</div><p class="why" hidden></p></div></div>';
+}).join("");
+
+[].slice.call(document.querySelectorAll(".opts")).forEach(function(box){
+  box.addEventListener("click",function(ev){
+    var b=ev.target.closest(".opt");
+    if(!b||b.disabled) return;
+    var qi=+box.getAttribute("data-q");
+    if(picks[qi]>=0) return;
+    if(!(sId.value||"").trim()){
+      elIdHint.innerHTML="<strong style=\"color:var(--stop)\">Enter your student ID first.</strong> It is written into the result file you submit.";
+      sId.focus(); return;
+    }
+    if(!startedAt) startedAt=new Date().toISOString();
+    picks[qi]=+b.getAttribute("data-i");
+    save(); render();
+  });
+});
+sId.addEventListener("input",save);
+
+dlBtn.addEventListener("click",function(){
+  var id=(sId.value||"").trim();
+  if(!id){ dlHint.textContent="Enter your student ID first — it goes into the file."; return; }
+  var r=receipt();
+  try{
+    var blob=new Blob([r.csv],{type:"text/csv;charset=utf-8"});
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement("a");
+    a.href=url; a.download="CH40051-L5-check_"+id.replace(/[^A-Za-z0-9_-]/g,"")+".csv";
+    a.style.display="none";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){URL.revokeObjectURL(url);},1000);
+    dlHint.textContent="Saved. Hand it in as your instructor directs.";
+  }catch(e){
+    dlHint.textContent="Your browser blocked the download. Screenshot this panel and submit that instead.";
+  }
+});
+
+/* ================= SHARED CONSTANTS AND HELPERS =========================
+   SI throughout, converted on the way in and out. Lengths are shown in nm
+   or Angstrom, concentrations in mol/kg, energies in units of kT.        */
+var E0 = 8.8541878e-12;        /* F/m                                     */
+var QE = 1.602176634e-19;      /* C                                       */
+var KB = 1.380649e-23;         /* J/K                                     */
+var NA = 6.02214076e23;        /* /mol                                    */
+var RHOW = 997.0;              /* kg/m3, water at 25 C                    */
+var MONO = 'font-family="IBM Plex Mono,monospace"';
+
+function pillGroup(id, cb){
+  var wrap = document.getElementById(id);
+  wrap.addEventListener("click", function(e){
+    var b = e.target.closest("button.pill");
+    if(!b) return;
+    [].slice.call(wrap.querySelectorAll("button.pill")).forEach(function(o){
+      o.setAttribute("aria-pressed", o === b ? "true" : "false");
+    });
+    cb(b);
+  });
+}
+
+/* Debye length, m. I in mol/kg, turned into mol/m3 with the solvent
+   density -- which is why B below carries a density too.                */
+function debyeLen(I, er, T){
+  if(I <= 0) return Infinity;
+  return Math.sqrt(E0 * er * KB * T / (2 * NA * QE * QE * I * RHOW));
+}
+
+/* ================= 1 - THE ION ATMOSPHERE =============================== */
+var SALTS = {
+  NaCl:  {nm:"NaCl",  zp: 1, zm:-1, np:1, nm_:1, a:4.0},
+  CaCl2: {nm:"CaCl₂", zp: 2, zm:-1, np:1, nm_:2, a:5.0},
+  MgSO4: {nm:"MgSO₄", zp: 2, zm:-2, np:1, nm_:1, a:5.5},
+  LaCl3: {nm:"LaCl₃", zp: 3, zm:-1, np:1, nm_:3, a:6.0}
+};
+/* ionic strength of a fully dissociated salt at molality m, mol/kg */
+function ionicStrength(s, m){
+  return 0.5 * (s.np * s.zp * s.zp + s.nm_ * s.zm * s.zm) * m;
+}
+
+var atSalt = "NaCl", atEr = 78.4;
+["atC", "atT"].forEach(function(id){
+  document.getElementById(id).addEventListener("input", atDraw);
+});
+pillGroup("atSalt", function(b){ atSalt = b.getAttribute("data-s"); atDraw(); });
+pillGroup("atSolv", function(b){ atEr = +b.getAttribute("data-e"); atDraw(); });
+document.getElementById("atA").addEventListener("click", function(){
+  document.getElementById("atC").value = -1; atDraw();
+});
+document.getElementById("atB").addEventListener("click", function(){
+  document.getElementById("atC").value = -4; atDraw();
+});
+
+function atDraw(){
+  var s = SALTS[atSalt];
+  var m = Math.pow(10, +document.getElementById("atC").value);   /* mol/kg  */
+  var T = +document.getElementById("atT").value;
+  var I = ionicStrength(s, m);
+  var lam = debyeLen(I, atEr, T);                                /* m       */
+  var a = s.a * 1e-10;                                           /* m       */
+
+  /* molality, spelled out - "10 mm" reads as millimetres */
+  document.getElementById("atCv").textContent =
+    (m >= 0.1 ? m.toFixed(2) + " mol kg⁻¹" : m >= 1e-3 ? (m * 1e3).toFixed(1) + " mmol kg⁻¹"
+                                                     : (m * 1e6).toFixed(0) + " µmol kg⁻¹");
+  document.getElementById("atTv").textContent = T + " K  (" + (T - 273.15).toFixed(0) + " °C)";
+  document.getElementById("atI").textContent  = I.toPrecision(3) + " mol kg⁻¹";
+  document.getElementById("atL").textContent  = (lam * 1e9).toPrecision(3) + " nm";
+  document.getElementById("atA2").textContent = s.a.toFixed(1) + " Å";
+
+  /* --- the screened potential, against the bare one ---
+     Both are scaled to 1 at the ion's surface, r = a, so the figure compares
+     how fast they fall. The marker sits at a + 1/kappa, one Debye length out
+     from the surface, where the screened curve is 1/e of the bare one.    */
+  var W = 400, H = 340, L = 62, R = 12, Tp = 20, B = 54;
+  var rmax = Math.max(a + 3.5 * lam, 2.6 * a);
+  var X = function(r){ return L + (r / rmax) * (W - L - R); };
+  var Y = function(p){ return Tp + (1 - p) * (H - Tp - B); };
+  var str = "", g, i;
+  /* r < a: a is the distance of closest approach - no other ion's centre
+     can come nearer - so the atmosphere, and both curves, start at a      */
+  str += '<rect x="' + L + '" y="' + Tp + '" width="' + (X(a) - L).toFixed(1) + '" height="' + (H - Tp - B)
+       + '" fill="var(--line-2)" opacity="0.28"/>';
+  if(X(a) - L > 18){
+    var bx = (L + X(a)) / 2 + 4, by = (Tp + H - B) / 2;
+    str += '<text x="' + bx.toFixed(1) + '" y="' + by.toFixed(1) + '" text-anchor="middle" ' + MONO
+         + ' font-size="12" fill="var(--ink-2)" transform="rotate(-90 ' + bx.toFixed(1) + ' ' + by.toFixed(1) + ')">'
+         + 'r &lt; a: no other ion gets this close</text>';
+  }
+  str += '<line x1="' + L + '" y1="' + (H - B) + '" x2="' + (W - R) + '" y2="' + (H - B) + '" stroke="var(--line-2)"/>';
+  str += '<line x1="' + L + '" y1="' + Tp + '" x2="' + L + '" y2="' + (H - B) + '" stroke="var(--line-2)"/>';
+  var nd = rmax * 1e9;
+  for(g = 0; g <= 4; g++){
+    var rv = rmax * g / 4;
+    str += '<line x1="' + X(rv).toFixed(1) + '" y1="' + (H - B) + '" x2="' + X(rv).toFixed(1) + '" y2="' + (H - B + 4) + '" stroke="var(--line-2)"/>';
+    str += '<text x="' + X(rv).toFixed(1) + '" y="' + (H - B + 19) + '" text-anchor="middle" ' + MONO
+         + ' font-size="13" fill="var(--muted)">' + (rv * 1e9).toFixed(nd < 5 ? 1 : 0) + '</text>';
+  }
+  str += '<text x="' + ((L + W - R) / 2) + '" y="' + (H - 9) + '" text-anchor="middle" ' + MONO
+       + ' font-size="13" fill="var(--muted)">distance from the ion’s centre / nm</text>';
+  [0.5, 1].forEach(function(f){
+    str += '<line x1="' + (L - 4) + '" y1="' + Y(f) + '" x2="' + L + '" y2="' + Y(f) + '" stroke="var(--line-2)"/>';
+    str += '<text x="' + (L - 7) + '" y="' + (Y(f) + 4.5) + '" text-anchor="end" ' + MONO
+         + ' font-size="13" fill="var(--muted)">' + f.toFixed(1) + '</text>';
+  });
+  str += '<text x="16" y="' + ((Tp + H - B) / 2) + '" text-anchor="middle" ' + MONO
+       + ' font-size="13" fill="var(--muted)" transform="rotate(-90 16 ' + ((Tp + H - B) / 2) + ')">ψ(r) / ψ(a)</text>';
+
+  var bare = [], scr = [];
+  for(i = 0; i <= 200; i++){
+    var r = a + (rmax - a) * i / 200;
+    bare.push(X(r).toFixed(1) + "," + Y(a / r).toFixed(1));
+    scr.push(X(r).toFixed(1) + "," + Y((a / r) * Math.exp(-(r - a) / lam)).toFixed(1));
+  }
+  str += '<polyline points="' + bare.join(" ") + '" fill="none" stroke="var(--muted)" stroke-width="1.6" stroke-dasharray="4 3"/>';
+  str += '<polyline points="' + scr.join(" ") + '" fill="none" stroke="var(--red-)" stroke-width="2.4"/>';
+
+  /* one Debye length out from the surface: 1/e of the bare potential */
+  var rk = a + lam;
+  if(rk < rmax){
+    var yb = Y(a / rk), ys = Y((a / rk) * Math.exp(-1));
+    str += '<line x1="' + X(rk).toFixed(1) + '" y1="' + Tp + '" x2="' + X(rk).toFixed(1) + '" y2="' + (H - B)
+         + '" stroke="var(--ox)" stroke-width="1.6"/>';
+    str += '<text x="' + (X(rk) + 5).toFixed(1) + '" y="' + (Tp + 56) + '" ' + MONO + ' font-size="13" paint-order="stroke" stroke="var(--surface)" stroke-width="4" stroke-linejoin="round" fill="var(--ox)">r = a + 1/κ</text>';
+    str += '<circle cx="' + X(rk).toFixed(1) + '" cy="' + yb.toFixed(1) + '" r="3.5" fill="var(--surface)" stroke="var(--muted)" stroke-width="1.6"/>';
+    str += '<circle cx="' + X(rk).toFixed(1) + '" cy="' + ys.toFixed(1) + '" r="4" fill="var(--red-)"/>';
+    str += '<text x="' + (X(rk) + 5).toFixed(1) + '" y="' + (Tp + 74) + '" ' + MONO
+         + ' font-size="13" fill="var(--red-)">37 % of bare</text>';
+  }
+  str += '<text x="' + (W - R - 4) + '" y="' + (Tp + 14) + '" text-anchor="end" ' + MONO
+       + ' font-size="13" paint-order="stroke" stroke="var(--surface)" stroke-width="4" stroke-linejoin="round" fill="var(--muted)">ion alone: a/r</text>';
+  str += '<text x="' + (W - R - 4) + '" y="' + (Tp + 31) + '" text-anchor="end" ' + MONO
+       + ' font-size="13" paint-order="stroke" stroke="var(--surface)" stroke-width="4" stroke-linejoin="round" fill="var(--red-)">with its atmosphere</text>';
+  document.getElementById("atplot").innerHTML = str;
+
+  /* the graph, in a sentence, for whatever is set */
+  var fBare = a / rk, fScr = fBare * Math.exp(-1);
+  /* the orange line in numbers: the same scaled values the graph plots */
+  document.getElementById("atRk").textContent = (rk * 1e9).toPrecision(3) + " nm";
+  document.getElementById("atPb").textContent = fBare.toFixed(3);
+  document.getElementById("atPs").textContent = fScr.toFixed(3);
+  document.getElementById("atRead").innerHTML = "At r = " + (rk * 1e9).toPrecision(2) + " nm the bare potential would still be "
+    + fBare.toFixed(2) + " of its surface value; screened, it is " + fScr.toFixed(2) + ".";
+
+  gsDraw(performance.now());
+}
+
+/* ================= SHARED ANIMATION LOOP ================================
+   One requestAnimationFrame loop for every animated picture on the page.
+   A picture only redraws while its tab is showing, at about 30 frames a
+   second, and with reduced motion asked for the thermal jiggling stops. */
+var REDUCED = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+var ANIM = [], animLast = 0;
+function animLoop(ts){
+  if(ts - animLast > 32){
+    animLast = ts;
+    ANIM.forEach(function(a){ if(!document.getElementById(a.panel).hidden) a.tick(ts); });
+  }
+  window.requestAnimationFrame(animLoop);
+}
+/* x as "1.84 × 10<sup>7</sup>" */
+function sciH(x, d){
+  if(x === 0) return "0";
+  var e = Math.floor(Math.log10(Math.abs(x))), m = x / Math.pow(10, e);
+  if(Math.abs(+m.toFixed(d - 1)) >= 10){ m /= 10; e++; }
+  return m.toFixed(d - 1) + " × 10<sup>" + e + "</sup>";
+}
+var T25 = 298.15;
+
+/* ================= 2b - GAUSS'S LAW AROUND ONE ION ====================== */
+/* The solution set at the top of the Ion Atmosphere tab, the central ion
+   the salt's size a. The enclosed charge is the Debye-Huckel one, Q(r) = z e (1 + k r) e^-k(r-a) / (1 + k a): all of
+   the ion at r = a, none of it once the sphere has taken in the atmosphere. */
+var GS_A = 0.3e-9, GS_NL = 24;
+var gsMode = "atm", gsPlay = false, gsT0 = 0;
+/* the order in which the field lines end on the atmosphere, scattered round the ion */
+var GS_ORDER = [0, 13, 6, 19, 3, 16, 9, 22, 1, 14, 7, 20, 4, 17, 10, 23, 2, 15, 8, 21, 5, 18, 11, 12];
+/* counter-charge sites in units of 1/kappa, drawn from r e^-kr, with their own drift */
+var GS_DOTS = (function(){
+  var out = [], seed = 5;
+  function rnd(){ seed = (seed * 16807) % 2147483647; return seed / 2147483647; }
+  for(var i = 0; i < 56; i++){
+    out.push({u: -Math.log(rnd() + 1e-9) - Math.log(rnd() + 1e-9), th: rnd() * 6.283, ph: rnd() * 6.283, w: 0.4 + rnd()});
+  }
+  return out;
+})();
+function gsQ(r, kap){
+  if(r <= GS_A) return 1;
+  return (1 + kap * r) * Math.exp(-kap * (r - GS_A)) / (1 + kap * GS_A);
+}
+
+pillGroup("gsMode", function(b){ gsMode = b.getAttribute("data-m"); gsDraw(performance.now()); });
+function gsStop(){ gsPlay = false; document.getElementById("gsPlay").innerHTML = "&#9654; Grow the sphere"; }
+document.getElementById("gsR").addEventListener("input", function(){ gsStop(); gsDraw(performance.now()); });
+document.getElementById("gsPlay").addEventListener("click", function(){
+  if(gsPlay){ gsStop(); return; }
+  gsPlay = true; gsT0 = performance.now(); this.innerHTML = "&#10074;&#10074; Stop";
+});
+ANIM.push({panel:"p-atm", tick:function(ts){
+  if(gsPlay){
+    var ph = ((ts - gsT0) / 7000) * 2 * Math.PI;
+    document.getElementById("gsR").value = Math.round(1000 * (0.5 - 0.5 * Math.cos(ph)));
+  }
+  if(gsPlay || !REDUCED) gsDraw(ts);
+}});
+
+function gsDraw(ts){
+  var sl = SALTS[atSalt], Tk = +document.getElementById("atT").value;
+  var I = ionicStrength(sl, Math.pow(10, +document.getElementById("atC").value));
+  GS_A = sl.a * 1e-10;
+  var lam = debyeLen(I, atEr, Tk), kap = 1 / lam, atm = gsMode === "atm";
+  /* out to six Debye lengths: there Q_enc < 1/48, so the last of the 24 lines
+     has ended too, and the picture reaches the 'nothing crosses' the text promises */
+  var rView = GS_A + 6 * lam;
+  var R = GS_A + (rView - GS_A) * (+document.getElementById("gsR").value) / 1000;
+  var Q = atm ? gsQ(R, kap) : 1;
+  var K = 1 / (4 * Math.PI * E0 * atEr);
+  var Eb = K * sl.zp * QE / (R * R), E = Eb * Q;
+
+  document.getElementById("gsRv").textContent = (R * 1e9).toFixed(2) + " nm";
+  document.getElementById("gsRr").textContent = (R * 1e9).toFixed(2) + " nm  = " + ((R - GS_A) / lam).toFixed(2) + " × 1/κ beyond the ion";
+  document.getElementById("gsQ").textContent = Q.toFixed(3);
+  document.getElementById("gsE").innerHTML = sciH(E, 3) + " V/m";
+  document.getElementById("gsNote").textContent = "around the cation of " + sl.nm + ", a = " + sl.a.toFixed(1) + " Å, 1/κ = " + (lam * 1e9).toPrecision(2) + " nm";
+
+  /* ---- the picture ---- */
+  var cx = 200, cy = 196, PR = 172;
+  function P(r){ return r / rView * PR; }
+  var s = "", tt = REDUCED ? 0 : ts / 1000, i;
+  if(atm){
+    /* the atmosphere: a haze as dense as the counter-charge, and dots that drift in it */
+    for(i = 24; i >= 1; i--){
+      var rr = GS_A + (rView - GS_A) * i / 24;
+      var dens = Math.exp(-kap * (rr - GS_A)) * GS_A / rr;
+      s += '<circle cx="' + cx + '" cy="' + cy + '" r="' + P(rr).toFixed(1) + '" fill="var(--red-)" opacity="' + (0.05 + 0.10 * dens).toFixed(3) + '"/>';
+    }
+    GS_DOTS.forEach(function(d){
+      var rr = GS_A + (d.u + 0.15 * Math.sin(d.ph + tt * d.w)) * lam;
+      if(rr > rView || rr < GS_A * 1.6) return;
+      var th = d.th + 0.25 * Math.sin(d.ph * 1.7 + tt * d.w * 0.6);
+      s += '<circle cx="' + (cx + P(rr) * Math.cos(th)).toFixed(1) + '" cy="' + (cy + P(rr) * Math.sin(th)).toFixed(1) + '" r="3.2" fill="var(--red-)" opacity="0.85"/>';
+    });
+  }
+  /* field lines: each runs out until the charge left inside has fallen below its share */
+  var crossing = 0;
+  for(i = 0; i < GS_NL; i++){
+    var th2 = i / GS_NL * 2 * Math.PI, frac = (GS_ORDER[i] + 0.5) / GS_NL, end = rView;
+    if(atm){
+      var lo = GS_A, hi = GS_A + 40 * lam;
+      for(var it = 0; it < 40; it++){ var mid = (lo + hi) / 2; if(gsQ(mid, kap) > frac) lo = mid; else hi = mid; }
+      end = Math.min(rView, lo);
+    }
+    var r0 = Math.max(P(GS_A), 9) + 2, r1 = P(end), crosses = end > R;
+    if(crosses) crossing++;
+    s += '<line x1="' + (cx + r0 * Math.cos(th2)).toFixed(1) + '" y1="' + (cy + r0 * Math.sin(th2)).toFixed(1)
+       + '" x2="' + (cx + r1 * Math.cos(th2)).toFixed(1) + '" y2="' + (cy + r1 * Math.sin(th2)).toFixed(1)
+       + '" stroke="var(--ox)" stroke-width="1.6" stroke-dasharray="5 4" stroke-dashoffset="' + (-tt * 18).toFixed(1)
+       + '" opacity="' + (crosses ? 0.95 : 0.35) + '"/>';
+    if(crosses){
+      s += '<circle cx="' + (cx + P(R) * Math.cos(th2)).toFixed(1) + '" cy="' + (cy + P(R) * Math.sin(th2)).toFixed(1) + '" r="3" fill="var(--ox)"/>';
+    }else if(end < rView){
+      s += '<circle cx="' + (cx + r1 * Math.cos(th2)).toFixed(1) + '" cy="' + (cy + r1 * Math.sin(th2)).toFixed(1) + '" r="2" fill="var(--red-)"/>';
+    }
+  }
+  s += '<circle cx="' + cx + '" cy="' + cy + '" r="' + Math.max(P(R), 1).toFixed(1) + '" fill="none" stroke="var(--sph)" stroke-width="2.2" stroke-dasharray="7 4"/>';
+  s += '<circle cx="' + cx + '" cy="' + cy + '" r="' + Math.max(P(GS_A), 9).toFixed(1) + '" fill="var(--ox)" stroke="var(--surface)" stroke-width="2"/>';
+  s += '<text x="' + cx + '" y="' + (cy + 4) + '" text-anchor="middle" fill="#fff" ' + MONO + ' font-size="11" font-weight="600">+' + (sl.zp > 1 ? sl.zp : "") + '</text>';
+  s += '<text x="10" y="24" fill="var(--sph)" ' + MONO + ' font-size="17" font-weight="600">' + crossing + ' of ' + GS_NL + ' lines cross the sphere</text>';
+  s += '<text x="10" y="50" fill="var(--ink-2)" ' + MONO + ' font-size="15">' + (atm ? '→ it holds ' + (crossing / GS_NL).toFixed(2) + ' of the ion’s charge' : 'no atmosphere: every line escapes') + '</text>';
+  var bar = P(lam);
+  s += '<line x1="12" y1="388" x2="' + (12 + bar).toFixed(1) + '" y2="388" stroke="var(--ink-2)" stroke-width="2.5"/>';
+  s += '<text x="' + (16 + bar).toFixed(1) + '" y="393" fill="var(--ink-2)" ' + MONO + ' font-size="15">1/κ = ' + (lam * 1e9).toPrecision(2) + ' nm</text>';
+  document.getElementById("gspic").innerHTML = s;
+
+  /* the two figures, in words, for whatever is set */
+  var beyond = (R - GS_A) / lam;
+  document.getElementById("gsRead").innerHTML = atm
+    ? "<b>Right now:</b> the sphere has radius r = " + (R * 1e9).toFixed(2) + " nm, " + beyond.toFixed(1)
+      + " Debye lengths beyond the ion's surface. <b>" + crossing + " of " + GS_NL + "</b> field lines cross it, so it holds about "
+      + crossing + "/" + GS_NL + " = " + (crossing / GS_NL).toFixed(2) + " of the ion's charge; the plot, computed exactly, reads "
+      + "Q<sub>enc</sub>/ze = " + Q.toFixed(3) + ". The other " + (GS_NL - crossing) + " lines ended on counter-charge inside the sphere."
+    : "<b>Right now:</b> no atmosphere, so all " + GS_NL + " lines cross the sphere at any radius and the plot stays at 1 — the field "
+      + "falls only as 1/r², and the ion is felt everywhere.";
+
+  /* ---- the plot ---- */
+  var W = 360, H = 250, L = 46, Rr = 36, T = 16, B = 38;
+  function X(r){ return L + r / rView * (W - L - Rr); }
+  function Y(q){ return T + (1 - q / 1.1) * (H - T - B); }
+  var p = "";
+  p += '<rect x="' + L + '" y="' + T + '" width="' + (X(GS_A) - L).toFixed(1) + '" height="' + (H - T - B) + '" fill="var(--line-2)" opacity="0.3"/>';
+  p += '<line x1="' + L + '" y1="' + (H - B) + '" x2="' + (W - Rr) + '" y2="' + (H - B) + '" stroke="var(--line-2)"/>';
+  p += '<line x1="' + L + '" y1="' + T + '" x2="' + L + '" y2="' + (H - B) + '" stroke="var(--line-2)"/>';
+  /* round steps - 0.5, 1, 2, 5 nm - rather than fifths of whatever the range is */
+  var span = rView * 1e9, stepNm = [0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50].filter(function(st){ return span / st <= 6; })[0] || 100;
+  for(i = 0; i * stepNm <= span + 1e-9; i++){
+    var xv = i * stepNm * 1e-9;
+    p += '<line x1="' + X(xv).toFixed(1) + '" y1="' + (H - B) + '" x2="' + X(xv).toFixed(1) + '" y2="' + (H - B + 4) + '" stroke="var(--line-2)"/>';
+    p += '<text x="' + X(xv).toFixed(1) + '" y="' + (H - B + 16) + '" text-anchor="middle" fill="var(--muted)" ' + MONO + ' font-size="9.5">' + +(i * stepNm).toFixed(1) + '</text>';
+  }
+  p += '<text x="' + ((L + W - Rr) / 2) + '" y="' + (H - 8) + '" text-anchor="middle" fill="var(--muted)" ' + MONO + ' font-size="10">sphere radius, r / nm</text>';
+  /* no 0.0 on this axis: the distance axis already labels the corner */
+  [0.5, 1].forEach(function(q){
+    p += '<text x="' + (L - 6) + '" y="' + (Y(q) + 3).toFixed(1) + '" text-anchor="end" fill="var(--muted)" ' + MONO + ' font-size="9.5">' + q.toFixed(1) + '</text>';
+  });
+  p += '<text transform="rotate(-90 12 ' + ((T + H - B) / 2) + ')" x="12" y="' + ((T + H - B) / 2) + '" text-anchor="middle" fill="var(--muted)" ' + MONO + ' font-size="10">Q_enc / ze</text>';
+  /* the same scale counted in field lines, as in the picture */
+  p += '<line x1="' + (W - Rr) + '" y1="' + T + '" x2="' + (W - Rr) + '" y2="' + (H - B) + '" stroke="var(--line-2)"/>';
+  [0, 0.5, 1].forEach(function(q){
+    p += '<text x="' + (W - Rr + 5) + '" y="' + (Y(q) + 3).toFixed(1) + '" fill="var(--muted)" ' + MONO + ' font-size="9.5">' + q * GS_NL + '</text>';
+  });
+  p += '<text transform="rotate(-90 ' + (W - 5) + ' ' + ((T + H - B) / 2) + ')" x="' + (W - 5) + '" y="' + ((T + H - B) / 2) + '" text-anchor="middle" fill="var(--muted)" ' + MONO + ' font-size="10">lines crossing</text>';
+  p += '<line x1="' + L + '" y1="' + Y(1).toFixed(1) + '" x2="' + (W - Rr) + '" y2="' + Y(1).toFixed(1) + '" stroke="var(--line-2)" stroke-width="1.6" stroke-dasharray="4 3"/>';
+  p += '<text x="' + (W - Rr - 4) + '" y="' + (Y(1) - 5).toFixed(1) + '" text-anchor="end" fill="var(--muted)" ' + MONO + ' font-size="9.5">bare ion</text>';
+  var badges = [], xsLab = "";
+  if(atm){
+    /* where the atmosphere's charge sits: -dQ/dr, scaled to its own peak */
+    var dist = [], peak = 0, qp = [], k2;
+    for(k2 = 0; k2 <= 200; k2++){
+      var r2 = GS_A + (rView - GS_A) * k2 / 200;
+      var g = kap * kap * r2 * Math.exp(-kap * (r2 - GS_A)) / (1 + kap * GS_A);
+      dist.push([r2, g]); if(g > peak) peak = g;
+      qp.push(X(r2).toFixed(1) + "," + Y(gsQ(r2, kap)).toFixed(1));
+    }
+    p += '<polygon points="' + X(GS_A).toFixed(1) + ',' + Y(0) + ' ' + dist.map(function(d){ return X(d[0]).toFixed(1) + "," + Y(0.55 * d[1] / peak).toFixed(1); }).join(" ")
+       + ' ' + X(rView).toFixed(1) + ',' + Y(0) + '" fill="var(--red-)" opacity="0.14"/>';
+    /* its peak: r = 1/kappa from the centre, or the ion's surface if 1/kappa < a */
+    var rPk = Math.max(GS_A, lam), gPk = kap * kap * rPk * Math.exp(-kap * (rPk - GS_A)) / (1 + kap * GS_A);
+    if(rPk <= rView){
+      p += '<circle cx="' + X(rPk).toFixed(1) + '" cy="' + Y(0.55 * gPk / peak).toFixed(1) + '" r="4" fill="var(--red-)" stroke="var(--surface)" stroke-width="1.5"/>';
+    }
+    p += '<polyline points="' + qp.join(" ") + '" fill="none" stroke="var(--sph)" stroke-width="2.4"/>';
+    var xs = X(GS_A + lam);
+    p += '<line x1="' + xs.toFixed(1) + '" y1="' + T + '" x2="' + xs.toFixed(1) + '" y2="' + (H - B) + '" stroke="var(--ox)" stroke-width="1.5"/>';
+    /* near the right edge the label goes on the line's left instead */
+    /* the label takes the side of the orange line that the sphere's dashed line is not on,
+       and a halo, so neither line nor hump runs through the words              */
+    var xsW = 74, xSph = X(R);
+    var xsEnd = xs + 5 + xsW > W - Rr
+      || (xSph > xs && xSph < xs + 5 + xsW + 4 && xs - 5 - xsW > L);
+    xsLab = '<rect x="' + (xsEnd ? xs - 5 - xsW : xs + 3).toFixed(1) + '" y="' + (H - B - 17) + '" width="' + (xsW + 2) + '" height="14" rx="2" fill="var(--surface)" opacity="0.92"/>'
+      + '<text x="' + (xsEnd ? xs - 5 : xs + 5).toFixed(1) + '" y="' + (H - B - 6) + '"' + (xsEnd ? ' text-anchor="end"' : '')
+       + ' fill="var(--ox)" ' + MONO + ' font-size="10" font-weight="700" paint-order="stroke" stroke="var(--surface)" stroke-width="3.5" stroke-linejoin="round">r = a + 1/κ</text>';
+    /* the three moments of step 3, marked on the curve itself:
+       1 r = a, all lines cross; 2 the hump's peak, steepest fall; 3 the edge, none cross */
+    p += '<line x1="' + X(rPk).toFixed(1) + '" y1="' + Y(0.55 * gPk / peak).toFixed(1) + '" x2="' + X(rPk).toFixed(1)
+       + '" y2="' + Y(gsQ(rPk, kap)).toFixed(1) + '" stroke="var(--ink-2)" stroke-width="1" stroke-dasharray="1.5 2"/>';
+    /* 2 sits a to the left of the orange line; its badge goes on the left too, so it is
+       never drawn on that line - unless that would put it on top of 1                 */
+    var b2dx = X(rPk) - X(GS_A) >= 20 ? -10 : 10;
+    [[GS_A, -8, -12], [rPk, b2dx, -10], [rView, -10, -12]].forEach(function(m, n){
+      var px = X(m[0]), py = Y(gsQ(m[0], kap));
+      var bx = Math.max(L + 9, Math.min(W - Rr - 9, px + m[1])), by = Math.max(T + 8, py + m[2]);
+      badges.push({x0: bx - 8, x1: bx + 8, y0: by - 8, y1: by + 8, bx: bx, by: by,
+        txt: ["r = a", "r = 1/κ", "r = a + 6/κ"][n], sub: n === 1 ? " (r = a when 1/κ < a)" : ""});
+      p += '<circle cx="' + px.toFixed(1) + '" cy="' + py.toFixed(1) + '" r="2.8" fill="var(--ink)"/>';
+      p += '<circle cx="' + bx.toFixed(1) + '" cy="' + by.toFixed(1) + '" r="7.5" fill="var(--surface)" stroke="var(--ink-2)" stroke-width="1.2"/>';
+      p += '<text x="' + bx.toFixed(1) + '" y="' + (by + 3.5).toFixed(1) + '" text-anchor="middle" fill="var(--ink)" ' + MONO + ' font-size="10" font-weight="700">' + (n + 1) + '</text>';
+    });
+  }
+  var xr = X(R);
+  p += '<line x1="' + xr.toFixed(1) + '" y1="' + T + '" x2="' + xr.toFixed(1) + '" y2="' + (H - B) + '" stroke="var(--sph)" stroke-width="1.4" stroke-dasharray="6 3"/>';
+  p += '<circle cx="' + xr.toFixed(1) + '" cy="' + Y(Q).toFixed(1) + '" r="5" fill="var(--sph)" stroke="var(--surface)" stroke-width="2"/>';
+  p += xsLab;   /* over the sphere's dashed line, which its halo then interrupts */
+  /* the count at the sphere goes wherever it is clear of the two fixed labels */
+  var qtxt = Q.toFixed(2) + ' ze inside', qw = qtxt.length * 6.3;
+  var busy = [{x0: W - Rr - 56, x1: W - Rr - 2, y0: Y(1) - 16, y1: Y(1) - 1}];
+  if(atm){
+    busy.push(xsEnd ? {x0: xs - 81, x1: xs - 2, y0: H - B - 17, y1: H - B - 2}
+                    : {x0: xs + 2, x1: xs + 81, y0: H - B - 17, y1: H - B - 2});      /* the a + 1/kappa label */
+  }
+  busy = busy.concat(badges);
+  /* each badge says where it is: beside it where that is clear of the frame,
+     the fixed labels, the other badges and the curve itself                */
+  var curve = [];
+  if(atm){
+    for(k2 = 0; k2 <= 60; k2++){
+      var rc = GS_A + (rView - GS_A) * k2 / 60, yc = Y(gsQ(rc, kap)), xc = X(rc);
+      curve.push({x0: xc - 1.5, x1: xc + 1.5, y0: yc - 1.5, y1: yc + 1.5});
+    }
+  }
+  badges.slice().forEach(function(b, n){
+    if(!b.txt) return;
+    var tw = b.txt.length * 6.1 + b.sub.length * 5.4;
+    var spots = [[b.bx + 11, b.by + 3.5, 1], [b.bx - 11, b.by + 3.5, -1],
+                 [b.bx + 11, b.by - 8, 1], [b.bx - 11, b.by - 8, -1],
+                 [b.bx + 11, b.by + 15, 1], [b.bx - 11, b.by + 15, -1]];
+    var got = null;
+    /* first clear of the curve too; failing that, the curve may run under the haloed text */
+    [curve, []].some(function(line){ return spots.some(function(c){
+      var x0 = c[2] > 0 ? c[0] : c[0] - tw;
+      var bx = {x0: x0, x1: x0 + tw, y0: c[1] - 11, y1: c[1] + 4};
+      var ok = bx.x0 >= L + 1 && bx.x1 <= W - Rr - 1 && bx.y0 >= T - 2 && bx.y1 <= H - B
+        && busy.concat(line).every(function(o){ return o === b || bx.x1 < o.x0 || o.x1 < bx.x0 || bx.y1 < o.y0 || o.y1 < bx.y0; });
+      if(ok){ got = c; busy.push(bx); }
+      return ok;
+    }); });
+    if(!got){
+      /* crowded (1/kappa just above a puts 1 and 2 side by side): the in-frame spot overlapping least */
+      var best = 1e9;
+      spots.concat([[b.bx + 11, b.by + 27, 1], [b.bx - 11, b.by + 27, -1], [b.bx + 11, b.by - 20, 1]]).forEach(function(c){
+        var x0 = c[2] > 0 ? c[0] : c[0] - tw, bx = {x0: x0, x1: x0 + tw, y0: c[1] - 11, y1: c[1] + 4};
+        if(bx.x0 < L + 1 || bx.x1 > W - Rr - 1 || bx.y0 < T - 2 || bx.y1 > H - B) return;
+        var hit = busy.reduce(function(a, o){
+          return a + (o === b ? 0 : Math.max(0, Math.min(bx.x1, o.x1) - Math.max(bx.x0, o.x0)) * Math.max(0, Math.min(bx.y1, o.y1) - Math.max(bx.y0, o.y0)));
+        }, 0);
+        if(hit < best){ best = hit; got = c; }
+      });
+      if(!got) got = [b.bx + 11, b.by + 3.5, 1];
+      var gx = got[2] > 0 ? got[0] : got[0] - tw;
+      busy.push({x0: gx, x1: gx + tw, y0: got[1] - 11, y1: got[1] + 4});
+    }
+    /* a backing, so the orange line - a to the right of 2 - never strikes through a label */
+    p += '<rect x="' + ((got[2] > 0 ? got[0] : got[0] - tw) - 1).toFixed(1) + '" y="' + (got[1] - 10).toFixed(1) + '" width="' + (tw + 2).toFixed(1)
+       + '" height="13" rx="2" fill="var(--surface)" opacity="0.92"/>';
+    p += '<text x="' + got[0].toFixed(1) + '" y="' + got[1].toFixed(1) + '" text-anchor="' + (got[2] > 0 ? "start" : "end")
+       + '" fill="var(--ink)" ' + MONO + ' font-size="9.5" font-weight="600" paint-order="stroke" stroke="var(--surface)" stroke-width="3" stroke-linejoin="round">'
+       + b.txt + (b.sub ? '<tspan font-size="8" font-weight="500">' + b.sub.replace("<", "&lt;") + '</tspan>' : '') + '</text>';
+  });
+  function free(bx){
+    return bx.x0 >= L && bx.x1 <= W - Rr && bx.y0 >= T - 2 && bx.y1 <= H - B
+      && busy.every(function(o){ return bx.x1 < o.x0 || o.x1 < bx.x0 || bx.y1 < o.y0 || o.y1 < bx.y0; });
+  }
+  var yQ = Y(Q), pick = null;
+  /* on the floor, with the sphere at the frame's edge, the spots beside the dot
+     are the frame and the a + 1/kappa label; the curve is flat there, so the
+     last spots stand further up                                           */
+  [[1, yQ - 9], [-1, yQ - 9], [1, yQ + 18], [-1, yQ + 18],
+   [-1, yQ - 24], [1, yQ - 24], [-1, yQ - 39], [1, yQ - 39],
+   [1, yQ + 33], [-1, yQ + 33], [-1, yQ - 54], [1, yQ - 54], [1, yQ + 48], [-1, yQ + 48], [-1, yQ - 69], [1, yQ - 69]].some(function(c){
+    var x0 = c[0] > 0 ? xr + 8 : xr - 8 - qw;
+    if(free({x0: x0, x1: x0 + qw, y0: c[1] - 11, y1: c[1] + 3})){ pick = c; return true; }
+    return false;
+  });
+  if(!pick) pick = [xr < W - Rr - 90 ? 1 : -1, Math.max(T + 12, yQ - 9)];
+  p += '<text x="' + (xr + 8 * pick[0]).toFixed(1) + '" y="' + pick[1].toFixed(1) + '" text-anchor="' + (pick[0] > 0 ? "start" : "end")
+     + '" fill="var(--sph)" ' + MONO + ' font-size="10" font-weight="600">' + qtxt + '</text>';
+  document.getElementById("gsplot").innerHTML = p;
+}
+
+atDraw();
+gsDraw(0);
+/* ================= 3 - FIELD AND POTENTIAL ==============================
+   Two pictures, each with its own test charge, q = +e or -e.
+     one ion          a cation, +e, in water at 25 C; closest approach a = 0.4 nm
+                        alone:       psi = K/r,  E = K/r^2
+                        atmosphere:  psi = K e^{-k(r-a)} / ((1+ka) r)
+                                     E = -dpsi/dr = K (1+kr) e^{-k(r-a)} / ((1+ka) r^2)
+                        K = e / 4 pi eps0 epsr,  1/k at 0.1 mol/kg
+     two electrodes   + electrode at x = 0 held at dV, the other at x = d, 0 V:
+                        psi = dV (1 - x/d),  E = dV/d
+   The charge drifts along x at a cartoon speed that grows with E: down the
+   potential if positive, up it if negative. Its energy is U = q psi, and the
+   work the field does is q (psi at release - psi now).                      */
+var FP_ER = 78.4, FP_A = 0.4e-9, FP_RMAX = 3.0e-9, FP_XMAX = 10e-3;
+var FP_K = QE / (4 * Math.PI * E0 * FP_ER);
+var FP_KAP = 1 / debyeLen(0.1, FP_ER, T25);
+
+function fpArrow(x1, y1, x2, y2, col, w){
+  var dx = x2 - x1, dy = y2 - y1, l = Math.sqrt(dx * dx + dy * dy) || 1, ux = dx / l, uy = dy / l, h = 4 + w * 1.6;
+  var bx = x2 - ux * h, by = y2 - uy * h;
+  return '<line x1="' + x1.toFixed(1) + '" y1="' + y1.toFixed(1) + '" x2="' + bx.toFixed(1) + '" y2="' + by.toFixed(1) + '" stroke="' + col + '" stroke-width="' + w + '"/>'
+    + '<polygon points="' + x2.toFixed(1) + ',' + y2.toFixed(1) + ' ' + (bx - uy * h * 0.55).toFixed(1) + ',' + (by + ux * h * 0.55).toFixed(1) + ' '
+    + (bx + uy * h * 0.55).toFixed(1) + ',' + (by - ux * h * 0.55).toFixed(1) + '" fill="' + col + '"/>';
+}
+function fpTxt(x, y, t, col, anchor, size, weight){
+  return '<text x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" text-anchor="' + (anchor || "middle") + '" fill="' + col + '" ' + MONO
+    + ' font-size="' + (size || 10.5) + '"' + (weight ? ' font-weight="' + weight + '"' : '')
+    + ' paint-order="stroke" stroke="var(--surface)" stroke-width="3.5" stroke-linejoin="round">' + t + '</text>';
+}
+
+function fpMake(p, src){
+  var st = {src: src, atm: 0, q: 1, f: 0, f0: 0, play: false, last: 0};
+  var plates = src === "plates";
+  function el(id){ return document.getElementById(p + id); }
+  function volt(){ return +el("V").value; }
+  function gap(){ return +el("D").value * 1e-3; }
+  function range(){ return plates ? [0, gap()] : [FP_A, FP_RMAX]; }
+  function pos(f){ var r = range(); return r[0] + (f === undefined ? st.f : f) * (r[1] - r[0]); }
+  function at(x, atm){
+    if(plates){
+      var V = volt(), d = gap();
+      return x > d ? {psi: 0, E: 0} : {psi: V * (1 - x / d), E: V / d};
+    }
+    if(!(atm === undefined ? st.atm : atm)) return {psi: FP_K / x, E: FP_K / (x * x)};
+    var g = Math.exp(-FP_KAP * (x - FP_A)) / (1 + FP_KAP * FP_A);
+    return {psi: FP_K * g / x, E: FP_K * (1 + FP_KAP * x) * g / (x * x)};
+  }
+  function psiTxt(v){ return plates ? v.toFixed(3) + " V" : (v * 1e3).toFixed(1) + " mV"; }
+  function enTxt(u){
+    var sg = u < -1e-12 ? "−" : (u > 1e-12 ? "+" : "");
+    return plates ? sg + Math.abs(u).toFixed(3) + " eV" : sg + Math.abs(u * 1e3).toFixed(1) + " meV";
+  }
+  function start(){ st.f = st.f0 = st.q > 0 ? (plates ? 0.1 : 0.05) : 0.9; st.play = false; }
+
+  function draw(){
+    var W = 520, H = 430, xl = 58, xr = 456, sT = 10, sB = 180, mid = (sT + sB) / 2, pT = 236, pB = 390;
+    var ax1 = plates ? FP_XMAX : FP_RMAX;
+    var psiTop = plates ? 2.0 : 0.05, eTop = plates ? 2000 : 1.2e8;
+    function X(x){ return xl + x / ax1 * (xr - xl); }
+    function Y(v){ return pB - Math.min(v / psiTop, 1.04) * (pB - pT); }
+    function YE(e){ return pB - Math.min(e / eTop, 1.04) * (pB - pT); }
+    var rg = range(), xq = pos(), here = at(xq), q = st.q, V = plates ? volt() : 0, d = plates ? gap() : 0;
+    var s = "", j, cs = p + "ClipS", cp = p + "ClipP", gid = p + "Grad";
+
+    /* equipotentials: tenths of dV between the plates; round millivolts around the ion */
+    var levels = [];
+    if(plates){
+      for(j = 1; j < 10; j++) levels.push({v: V * j / 10, x: d * (1 - j / 10)});
+    }else{
+      var pHi = at(FP_A).psi, pLo = at(FP_RMAX).psi;
+      [40, 30, 20, 15, 10, 7].forEach(function(mv){
+        var v = mv * 1e-3, lo = FP_A, hi = FP_RMAX, it;
+        if(v >= pHi || v <= pLo) return;
+        for(it = 0; it < 50; it++){ var m = (lo + hi) / 2; if(at(m).psi > v) lo = m; else hi = m; }
+        levels.push({v: v, x: (lo + hi) / 2});
+      });
+    }
+
+    /* ---- the space ---- */
+    s += '<defs><clipPath id="' + cs + '"><rect x="' + xl + '" y="' + sT + '" width="' + (xr - xl) + '" height="' + (sB - sT) + '"/></clipPath>'
+       + '<clipPath id="' + cp + '"><rect x="' + xl + '" y="' + (pT - 8) + '" width="' + (xr - xl) + '" height="' + (pB - pT + 8) + '"/></clipPath>';
+    if(plates){
+      s += '<linearGradient id="' + gid + '" gradientUnits="userSpaceOnUse" x1="' + X(0).toFixed(1) + '" y1="0" x2="' + X(d).toFixed(1) + '" y2="0">'
+         + '<stop offset="0" stop-color="var(--red-)" stop-opacity="' + (0.05 + 0.3 * V / 2).toFixed(3) + '"/>'
+         + '<stop offset="1" stop-color="var(--red-)" stop-opacity="0"/></linearGradient>';
+    }else{
+      var Rpx = X(FP_RMAX * 1.6) - X(0), pA = at(FP_A, 0).psi;
+      s += '<radialGradient id="' + gid + '" gradientUnits="userSpaceOnUse" cx="' + X(0).toFixed(1) + '" cy="' + mid + '" r="' + Rpx.toFixed(1) + '">';
+      s += '<stop offset="0" stop-color="var(--red-)" stop-opacity="0.36"/>';
+      for(j = 0; j <= 16; j++){
+        var rr = FP_A + (FP_RMAX * 1.6 - FP_A) * j / 16;
+        s += '<stop offset="' + ((X(rr) - X(0)) / Rpx).toFixed(3) + '" stop-color="var(--red-)" stop-opacity="' + (0.36 * Math.min(1, at(rr).psi / pA)).toFixed(3) + '"/>';
+      }
+      s += '</radialGradient>';
+    }
+    s += '</defs>';
+    s += '<g clip-path="url(#' + cs + ')">';
+    s += '<rect x="' + xl + '" y="' + sT + '" width="' + (xr - xl) + '" height="' + (sB - sT) + '" fill="var(--surface)"/>';
+    if(plates){
+      s += '<rect x="' + X(0) + '" y="' + sT + '" width="' + (X(d) - X(0)).toFixed(1) + '" height="' + (sB - sT) + '" fill="url(#' + gid + ')"/>';
+      s += '<rect x="' + X(d).toFixed(1) + '" y="' + sT + '" width="' + (xr - X(d)).toFixed(1) + '" height="' + (sB - sT) + '" fill="var(--surface-2)"/>';
+    }else{
+      s += '<rect x="' + xl + '" y="' + sT + '" width="' + (xr - xl) + '" height="' + (sB - sT) + '" fill="url(#' + gid + ')"/>';
+    }
+    s += '<line x1="' + xl + '" y1="' + mid + '" x2="' + xr + '" y2="' + mid + '" stroke="var(--line-2)" stroke-dasharray="2 4"/>';
+    levels.forEach(function(l){
+      if(plates) s += '<line x1="' + X(l.x).toFixed(1) + '" y1="' + sT + '" x2="' + X(l.x).toFixed(1) + '" y2="' + sB + '" stroke="var(--red-)" stroke-width="1.3" opacity="0.85"/>';
+      else s += '<circle cx="' + X(0) + '" cy="' + mid + '" r="' + (X(l.x) - X(0)).toFixed(1) + '" fill="none" stroke="var(--red-)" stroke-width="1.3" opacity="0.85"/>';
+    });
+    /* field arrows, longer where the field is stronger */
+    if(plates){
+      var Ep = V / d, lenP = 10 + 30 * Math.sqrt(Ep / eTop), nc = Math.max(1, Math.floor((X(d) - X(0) - 16) / 62));
+      for(j = 0; j < nc; j++){
+        var cx = X(0) + (X(d) - X(0)) * (j + 0.5) / nc;
+        [sT + 24, mid - 40, mid + 40, sB - 24].forEach(function(y){ s += fpArrow(cx - lenP / 2, y, cx + lenP / 2, y, "var(--ox)", 1.8); });
+      }
+    }else{
+      s += '<circle cx="' + X(0) + '" cy="' + mid + '" r="' + (X(FP_A) - X(0)).toFixed(1) + '" fill="none" stroke="var(--muted)" stroke-width="1" stroke-dasharray="3 3"/>';
+      [0.62, 1.0, 1.5, 2.1, 2.75].forEach(function(rn){
+        var r = rn * 1e-9, Er = at(r).E, len = Math.max(6, Math.min(38, 6 + 32 * Math.sqrt(Er / eTop)));
+        [-60, -30, 30, 60].forEach(function(deg){
+          var t = deg * Math.PI / 180, x0 = X(0) + (X(r) - X(0)) * Math.cos(t), y0 = mid + (X(r) - X(0)) * Math.sin(t);
+          s += fpArrow(x0, y0, x0 + len * Math.cos(t), y0 + len * Math.sin(t), "var(--ox)", 1.6);
+        });
+      });
+    }
+    /* equipotential values, clear of each other and of the charge */
+    var lastX = -1e9;
+    levels.slice().sort(function(a, b){ return X(a.x) - X(b.x); }).forEach(function(l){
+      var lx = X(l.x);
+      if(lx - lastX < 34 || Math.abs(lx - X(xq)) < 22) return;
+      lastX = lx;
+      var t = plates ? (V < 1 ? l.v.toFixed(2) : l.v.toFixed(1)) + " V" : Math.round(l.v * 1e3) + " mV";
+      s += fpTxt(lx, plates ? sB - 7 : mid + 19, t, "var(--red-)", "middle", 10, 600);
+    });
+    s += '</g>';
+    if(plates){
+      s += '<rect x="' + (X(0) - 9) + '" y="' + sT + '" width="9" height="' + (sB - sT) + '" fill="var(--elec)"/>';
+      s += '<rect x="' + X(d).toFixed(1) + '" y="' + sT + '" width="9" height="' + (sB - sT) + '" fill="var(--elec)"/>';
+      s += fpTxt(X(0) - 9, sB + 16, "ψ = " + V.toFixed(2) + " V", "var(--red-)", "start", 10.5, 600);
+      s += fpTxt(Math.min(X(d) + 4.5, xr - 20), sB + 16, "0 V", "var(--red-)", "middle", 10.5, 600);
+    }else{
+      s += '<circle cx="' + X(0) + '" cy="' + mid + '" r="26" fill="var(--ink-2)"/>';
+      s += '<text x="' + X(0) + '" y="' + (mid + 6) + '" text-anchor="middle" fill="var(--surface)" ' + MONO + ' font-size="17" font-weight="700">+</text>';
+      s += fpTxt(X(FP_A) + 2, sB + 16, "a", "var(--muted)", "middle", 10.5);
+    }
+    s += '<rect x="' + xl + '" y="' + sT + '" width="' + (xr - xl) + '" height="' + (sB - sT) + '" fill="none" stroke="var(--line)"/>';
+
+    /* the test charge and the force on it */
+    var cxq = X(xq);
+    if(here.E > 0){
+      var lenF = 14 + 40 * Math.sqrt(Math.min(1, here.E / eTop)), x1 = cxq + q * 13, x2 = cxq + q * (13 + lenF);
+      s += fpArrow(x1, mid, x2, mid, "var(--go)", 2.6);
+      s += fpTxt((x1 + x2) / 2, mid - 15, "F = qE", "var(--go)", "middle", 10.5, 600);
+    }
+    s += '<circle cx="' + cxq.toFixed(1) + '" cy="' + mid + '" r="11" fill="var(--surface)" stroke="var(--ink)" stroke-width="2"/>';
+    s += '<text x="' + cxq.toFixed(1) + '" y="' + (mid + 5) + '" text-anchor="middle" fill="var(--ink)" ' + MONO + ' font-size="15" font-weight="700">' + (q > 0 ? "+" : "−") + '</text>';
+
+    /* ---- the graph ---- */
+    s += '<line x1="' + xl + '" y1="' + pB + '" x2="' + xr + '" y2="' + pB + '" stroke="var(--line-2)"/>';
+    s += '<line x1="' + xl + '" y1="' + pT + '" x2="' + xl + '" y2="' + pB + '" stroke="var(--line-2)"/>';
+    s += '<line x1="' + xr + '" y1="' + pT + '" x2="' + xr + '" y2="' + pB + '" stroke="var(--line-2)"/>';
+    (plates ? [0, 2, 4, 6, 8, 10] : [0, 0.5, 1, 1.5, 2, 2.5, 3]).forEach(function(v){
+      var xv = X(plates ? v * 1e-3 : v * 1e-9);
+      s += '<line x1="' + xv.toFixed(1) + '" y1="' + pB + '" x2="' + xv.toFixed(1) + '" y2="' + (pB + 4) + '" stroke="var(--line-2)"/>';
+      s += '<text x="' + xv.toFixed(1) + '" y="' + (pB + 16) + '" text-anchor="middle" fill="var(--muted)" ' + MONO + ' font-size="10">' + v + '</text>';
+    });
+    s += '<text x="' + ((xl + xr) / 2) + '" y="' + (H - 4) + '" text-anchor="middle" fill="var(--muted)" ' + MONO + ' font-size="10.5">'
+       + (plates ? "distance from the + electrode, x / mm" : "distance from the ion’s centre, r / nm") + '</text>';
+    (plates ? [0, 0.5, 1, 1.5, 2] : [0, 10, 20, 30, 40, 50]).forEach(function(v){
+      var yv = Y(plates ? v : v * 1e-3);
+      s += '<text x="' + (xl - 6) + '" y="' + (yv + 3.5).toFixed(1) + '" text-anchor="end" fill="var(--red-)" ' + MONO + ' font-size="10">' + v + '</text>';
+    });
+    (plates ? [0, 500, 1000, 1500, 2000] : [0, 0.4, 0.8, 1.2]).forEach(function(v){
+      var yv = YE(plates ? v : v * 1e8);
+      s += '<text x="' + (xr + 6) + '" y="' + (yv + 3.5).toFixed(1) + '" text-anchor="start" fill="var(--ox)" ' + MONO + ' font-size="10">' + v + '</text>';
+    });
+    var yc = (pT + pB) / 2;
+    s += '<text transform="rotate(-90 14 ' + yc + ')" x="14" y="' + yc + '" text-anchor="middle" fill="var(--red-)" ' + MONO + ' font-size="10.5">'
+       + (plates ? "potential ψ / V" : "potential ψ / mV") + '</text>';
+    s += '<text transform="rotate(-90 ' + (W - 8) + ' ' + yc + ')" x="' + (W - 8) + '" y="' + yc + '" text-anchor="middle" fill="var(--ox)" ' + MONO + ' font-size="10.5">'
+       + (plates ? "field E / V m⁻¹" : "field E / 10⁸ V m⁻¹") + '</text>';
+
+    s += '<g clip-path="url(#' + cp + ')">';
+    if(plates) s += '<rect x="' + X(d).toFixed(1) + '" y="' + pT + '" width="' + (xr - X(d)).toFixed(1) + '" height="' + (pB - pT) + '" fill="var(--surface-2)"/>';
+    else s += '<rect x="' + xl + '" y="' + pT + '" width="' + (X(FP_A) - xl).toFixed(1) + '" height="' + (pB - pT) + '" fill="var(--line-2)" opacity="0.3"/>';
+    var N = 220, pp = [], ep = [], pp0 = [], ep0 = [];
+    for(j = 0; j <= N; j++){
+      var xs = rg[0] + (rg[1] - rg[0]) * j / N, vs = at(xs);
+      pp.push(X(xs).toFixed(1) + "," + Y(vs.psi).toFixed(1));
+      ep.push(X(xs).toFixed(1) + "," + YE(vs.E).toFixed(1));
+      if(!plates && st.atm){ var v0 = at(xs, 0); pp0.push(X(xs).toFixed(1) + "," + Y(v0.psi).toFixed(1)); ep0.push(X(xs).toFixed(1) + "," + YE(v0.E).toFixed(1)); }
+    }
+    if(pp0.length){
+      s += '<polyline points="' + pp0.join(" ") + '" fill="none" stroke="var(--red-)" stroke-width="1.3" stroke-dasharray="4 3" opacity="0.5"/>';
+      s += '<polyline points="' + ep0.join(" ") + '" fill="none" stroke="var(--ox)" stroke-width="1.2" stroke-dasharray="4 3" opacity="0.5"/>';
+    }
+    /* each equipotential dropped onto the graph */
+    levels.forEach(function(l){
+      s += '<line x1="' + X(l.x).toFixed(1) + '" y1="' + (pT - 8) + '" x2="' + X(l.x).toFixed(1) + '" y2="' + Y(l.v).toFixed(1) + '" stroke="var(--red-)" stroke-width="1" stroke-dasharray="2 3" opacity="0.45"/>';
+      s += '<circle cx="' + X(l.x).toFixed(1) + '" cy="' + Y(l.v).toFixed(1) + '" r="2.2" fill="var(--red-)"/>';
+    });
+    s += '<polyline points="' + ep.join(" ") + '" fill="none" stroke="var(--ox)" stroke-width="1.8"/>';
+    s += '<polyline points="' + pp.join(" ") + '" fill="none" stroke="var(--red-)" stroke-width="2.6"/>';
+    /* the tangent at the charge: slope dpsi/dx = -E */
+    var py = Y(here.psi), m = (pB - pT) / psiTop * here.E / ((xr - xl) / ax1), ul = 1 / Math.sqrt(1 + m * m), half = 48;
+    var tx0 = cxq - half * ul, ty0 = py - half * ul * m, tx1 = cxq + half * ul, ty1 = py + half * ul * m;
+    s += '<line x1="' + tx0.toFixed(1) + '" y1="' + ty0.toFixed(1) + '" x2="' + tx1.toFixed(1) + '" y2="' + ty1.toFixed(1) + '" stroke="var(--ink)" stroke-width="1.6"/>';
+    s += '</g>';
+    s += '<line x1="' + cxq.toFixed(1) + '" y1="' + (mid + 12) + '" x2="' + cxq.toFixed(1) + '" y2="' + pB + '" stroke="var(--ink)" stroke-width="1" stroke-dasharray="3 3" opacity="0.35"/>';
+    s += '<circle cx="' + cxq.toFixed(1) + '" cy="' + YE(here.E).toFixed(1) + '" r="4" fill="var(--ox)" stroke="var(--surface)" stroke-width="1.5"/>';
+    s += '<circle cx="' + cxq.toFixed(1) + '" cy="' + py.toFixed(1) + '" r="5" fill="var(--red-)" stroke="var(--surface)" stroke-width="1.5"/>';
+    /* above the line past its lower end, or under it before its upper end: clear of the curve either way */
+    var lblRight = tx1 + 80 < xr;
+    s += fpTxt(lblRight ? tx1 + 4 : tx0 - 6, lblRight ? ty1 - 8 : ty0 + 15, "slope = −E", "var(--ink)", lblRight ? "start" : "end", 10.5, 600);
+    /* each curve named at one end, unless the charge is standing there */
+    var pS = at(rg[0]), eS = at(rg[1]);
+    if(Math.abs(cxq - X(rg[0])) > 40) s += fpTxt(X(rg[0]) + 8, Math.max(pT + 10, Y(pS.psi) - 8), "ψ", "var(--red-)", "start", 12, 700);
+    if(Math.abs(cxq - X(rg[1])) > 40) s += fpTxt(X(rg[1]) - 6, YE(eS.E) - 7, "E", "var(--ox)", "end", 12, 700);
+    if(pp0.length) s += fpTxt(xr - 6, pT + 12, "dashed: ion alone", "var(--muted)", "end", 10);
+    el("pic").innerHTML = s;
+
+    /* ---- words and numbers ---- */
+    if(plates){
+      el("Vv").textContent = V.toFixed(2) + " V";
+      el("Dv").textContent = (d * 1e3).toFixed(1) + " mm";
+    }
+    el("X").value = Math.round(st.f0 * 1000);
+    el("Xv").textContent = plates ? "x = " + (pos(st.f0) * 1e3).toFixed(2) + " mm" : "r = " + (pos(st.f0) * 1e9).toFixed(2) + " nm";
+    el("Play").innerHTML = st.play ? "&#10074;&#10074; Pause" : "&#9654; Let it go";
+    el("Note").textContent = plates
+      ? "E = ΔV/d = " + (V / d).toFixed(0) + " V/m everywhere between them"
+      : (st.atm ? "with its atmosphere, 1/κ = " + (1e9 / FP_KAP).toFixed(2) + " nm: both cut off faster" : "alone: ψ ∝ 1/r, E ∝ 1/r²");
+    el("Psi").textContent = psiTxt(here.psi);
+    el("E").innerHTML = (plates ? here.E.toFixed(0) : sciH(here.E, 3)) + " V/m";
+    el("F").innerHTML = sciH(QE * here.E, 3) + " N " + (q > 0 ? "&rarr;" : "&larr;");
+    var p0 = at(pos(st.f0)).psi, work = q * (p0 - here.psi);
+    el("U").textContent = enTxt(q * here.psi);
+    el("W").textContent = enTxt(work);
+    var moved = Math.abs(st.f - st.f0) > 1e-3;
+    el("Read").innerHTML = (q > 0
+        ? "<b>A positive charge is pushed down the slope</b>, toward lower ψ — the way the field points. "
+        : "<b>A negative charge is pushed up the slope</b>, toward higher ψ — against the field, because F = qE with q &lt; 0. ")
+      + (moved
+        ? "So far the field has done <b>" + enTxt(work) + "</b> of work on it, and its energy qψ has fallen by exactly that: "
+          + enTxt(q * p0) + " &rarr; " + enTxt(q * here.psi) + "."
+        : "Let it go: the field does work q × (ψ where it started − ψ where it is), and its energy qψ falls by the same amount.");
+  }
+
+  if(!plates) pillGroup(p + "Atm", function(b){ st.atm = +b.getAttribute("data-a"); draw(); });
+  else ["V", "D"].forEach(function(id){ el(id).addEventListener("input", draw); });
+  pillGroup(p + "Sign", function(b){ st.q = +b.getAttribute("data-q"); start(); draw(); });
+  el("X").addEventListener("input", function(){ st.f = st.f0 = +this.value / 1000; st.play = false; draw(); });
+  el("Play").addEventListener("click", function(){
+    if((st.q > 0 && st.f >= 1) || (st.q < 0 && st.f <= 0)) st.f = st.f0;
+    st.play = !st.play; st.last = 0; draw();
+  });
+  el("Reset").addEventListener("click", function(){ st.play = false; st.f = st.f0; draw(); });
+  ANIM.push({panel: "p-fp", tick: function(ts){
+    if(!st.play) return;
+    var dt = st.last ? Math.min(0.1, (ts - st.last) / 1000) : 0;
+    st.last = ts;
+    var eTop = plates ? 2000 : 1.2e8, rg = range(), ax1 = plates ? FP_XMAX : FP_RMAX, E = at(pos()).E;
+    /* axis-lengths per second, with a floor so a weak field still shows motion */
+    var v = (0.03 + 0.45 * Math.min(1, E / eTop)) * st.q;
+    var nf = st.f + v * dt * ax1 / (rg[1] - rg[0]);
+    if(nf <= 0 || nf >= 1){ nf = Math.max(0, Math.min(1, nf)); st.play = false; }
+    st.f = nf;
+    draw();
+  }});
+  start();
+  draw();
+  return st;
+}
+
+fpMake("fpi", "ion");
+fpMake("fpp", "plates");
+/* ================= 3b - AN ELECTROCHEMICAL CELL =========================
+   KCl between two identical electrodes L = 5 mm apart; dV switched on at t = 0.
+   One linear (Debye-Huckel) double layer at each electrode:
+     compact  C_H = 10 eps0 / 0.45 nm        diffuse  C_D = epsr eps0 kappa
+     C_i = (1/C_H + 1/C_D)^-1, and the charge q = C_i V_i splits V_H : V_D = C_D : C_H
+   Bulk resistance per area R = L/sigma, sigma = Lambda_m c (KCl, 25 C).
+     non-Faradaic  V_i(t) = dV/2 (1 - e^{-t/tau}),  tau = R C_i / 2
+     Faradaic      each electrode also passes j = 2 j0 sinh(eta/b), b = 2RT/F, j0 = 1 mA/cm2,
+                   no mass-transport limit; steady j from j R + 2 eta = dV;
+                   V_i(t) = eta (1 - e^{-t/tau_f}),  tau_f = (C_i/2) (R || 2 R_ct)
+     AC, 1 kHz     phasors: Z = R + 2/(i w C_i), drawn at phase w t
+   psi(x): +V/2 at the left electrode, linear through the compact layer, e^{-kappa s}
+   through the diffuse layer, linear through the bulk; mirrored at the right.
+   E = -dpsi/dx. K+ mobility u = lambda(K+)/F.                                   */
+var EC = {k: "block", c: 10, play: false, ph: 0, last: 0};
+var EC_L = 5e-3, EC_EH = 10, EC_DH = 0.45e-9, EC_J0 = 10, EC_W = 2 * Math.PI * 1000;
+var EC_LAM = {1: 146.95, 10: 141.27, 100: 128.96};   /* KCl, S cm2 mol-1, 25 C */
+var EC_UK = 73.48e-4 / (QE * NA);                    /* K+, m2 V-1 s-1         */
+
+function ecTime(t){
+  if(t < 1e-6) return +(t * 1e9).toPrecision(2) + " ns";
+  if(t < 1e-3) return +(t * 1e6).toPrecision(2) + " µs";
+  if(t < 1) return +(t * 1e3).toPrecision(2) + " ms";
+  return +t.toPrecision(2) + " s";
+}
+function ecModel(){
+  var V = +document.getElementById("ecV").value, c = EC.c;
+  var lam = debyeLen(c * 1e-3, FP_ER, T25), kap = 1 / lam;
+  var CH = EC_EH * E0 / EC_DH, CD = FP_ER * E0 * kap, Ci = 1 / (1 / CH + 1 / CD);
+  var sig = EC_LAM[c] * 1e-4 * c, R = EC_L / sig;
+  var m = {V: V, lam: lam, kap: kap, CH: CH, CD: CD, Ci: Ci, sig: sig, R: R, tau: R * Ci / 2, teps: FP_ER * E0 / sig,
+           t: Math.pow(10, +document.getElementById("ecT").value), Vt: V};
+  var b = 2 * KB * T25 / QE;
+  if(EC.k === "block"){
+    m.Vi = V / 2 * (1 - Math.exp(-m.t / m.tau));
+  }else if(EC.k === "far"){
+    var lo = 0, hi = V / R, it;
+    for(it = 0; it < 60; it++){ var jm = (lo + hi) / 2; if(jm * R + 2 * b * Math.asinh(jm / (2 * EC_J0)) > V) hi = jm; else lo = jm; }
+    m.jss = (lo + hi) / 2;
+    m.eta = b * Math.asinh(m.jss / (2 * EC_J0));
+    var Rct = b / Math.sqrt(4 * EC_J0 * EC_J0 + m.jss * m.jss);
+    m.tauf = Ci / 2 * (R * 2 * Rct) / (R + 2 * Rct);
+    m.Vi = m.eta * (1 - Math.exp(-m.t / m.tauf));
+  }else{
+    var kz = 1 / (EC_W * Ci), zi = -2 * kz, den = R * R + zi * zi;
+    var Ire = V * R / den, Iim = -V * zi / den;
+    var Vbre = Ire * R, Vbim = Iim * R, Vire = Iim * kz, Viim = -Ire * kz;
+    var cp = Math.cos(EC.ph), sp = Math.sin(EC.ph);
+    m.Vt = V * cp;
+    m.Vi = Vire * cp - Viim * sp;
+    m.bulkAmp = Math.sqrt(Vbre * Vbre + Vbim * Vbim);
+    m.dlAmp = Math.sqrt(Vire * Vire + Viim * Viim);
+  }
+  m.Vb = m.Vt - 2 * m.Vi;
+  m.VH = m.Vi * CD / (CH + CD);
+  m.VD = m.Vi - m.VH;
+  m.Eb = m.Vb / EC_L;
+  m.EH = m.VH / EC_DH;
+  m.j = m.Vb / R;
+  return m;
+}
+
+function ecDraw(){
+  var m = ecModel(), W = 520, H = 450, sT = 14, sB = 72, pT = 104, pB = 232, eT = 266, eB = 390;
+  var A0 = 62, A1 = 206, B0 = 222, B1 = 344, C0 = 360, C1 = 504;
+  var Z = EC_DH + 4 * m.lam, s = "", j, k;
+  function XA(d){ return A0 + d / Z * (A1 - A0); }
+  function XC(d){ return C1 - d / Z * (C1 - C0); }
+  function XB(x){ return B0 + x / EC_L * (B1 - B0); }
+  function Yp(v){ return (pT + pB) / 2 - Math.max(-1.05, Math.min(1.05, v / 0.55)) * (pB - pT) / 2; }
+  /* the field on linear scales, so that it reads as the slope of the curve above it: one scale for the
+     double layers (their largest field at 1 V, at steady state, for this salt) and one for the bulk (1 V over 5 mm) */
+  var EZ = 0.5 * m.CD / (m.CH + m.CD) / EC_DH * 1.05, EBK = 1 / EC_L * 1.05;
+  function Yz(e){ return eB - Math.min(1.02, Math.abs(e) / EZ) * (eB - eT); }
+  function Yb(e){ return eB - Math.min(1.02, Math.abs(e) / EBK) * (eB - eT); }
+  function sci(x){
+    var e = Math.floor(Math.log10(x)), mm = +(x / Math.pow(10, e)).toFixed(1), sup = "⁰¹²³⁴⁵⁶⁷⁸⁹";
+    return mm + "×10" + String(e).split("").map(function(ch){ return sup[+ch]; }).join("");
+  }
+  /* one interface, s from its electrode: potential drop from the electrode, and field strength */
+  function drop(d){ return d < EC_DH ? m.VH * d / EC_DH : m.VH + m.VD * (1 - Math.exp(-m.kap * (d - EC_DH))); }
+  function field(d){ return d < EC_DH ? m.EH : m.kap * m.VD * Math.exp(-m.kap * (d - EC_DH)) + m.Eb; }
+
+  /* frames, compact bands, gridlines */
+  [[pT, pB], [eT, eB]].forEach(function(r){
+    [[A0, A1], [B0, B1], [C0, C1]].forEach(function(g){
+      s += '<rect x="' + g[0] + '" y="' + r[0] + '" width="' + (g[1] - g[0]) + '" height="' + (r[1] - r[0]) + '" fill="var(--surface)" stroke="var(--line)"/>';
+    });
+    s += '<rect x="' + A0 + '" y="' + r[0] + '" width="' + Math.max(1.5, XA(EC_DH) - A0).toFixed(1) + '" height="' + (r[1] - r[0]) + '" fill="var(--line-2)" opacity="0.6"/>';
+    s += '<rect x="' + Math.min(C1 - 1.5, XC(EC_DH)).toFixed(1) + '" y="' + r[0] + '" width="' + Math.max(1.5, C1 - XC(EC_DH)).toFixed(1) + '" height="' + (r[1] - r[0]) + '" fill="var(--line-2)" opacity="0.6"/>';
+    [214, 352].forEach(function(xb){
+      s += '<line x1="' + (xb - 4) + '" y1="' + (r[1] + 5) + '" x2="' + (xb - 1) + '" y2="' + (r[1] - 5) + '" stroke="var(--muted)" stroke-width="1.3"/>';
+      s += '<line x1="' + (xb + 1) + '" y1="' + (r[1] + 5) + '" x2="' + (xb + 4) + '" y2="' + (r[1] - 5) + '" stroke="var(--muted)" stroke-width="1.3"/>';
+    });
+  });
+  s += '<line x1="' + A0 + '" y1="' + Yp(0) + '" x2="' + C1 + '" y2="' + Yp(0) + '" stroke="var(--line-2)" stroke-dasharray="2 3"/>';
+  [[A0, A1], [B0, B1], [C0, C1]].forEach(function(g){
+    s += '<line x1="' + g[0] + '" y1="' + ((eT + eB) / 2) + '" x2="' + g[1] + '" y2="' + ((eT + eB) / 2) + '" stroke="var(--line)" stroke-dasharray="2 3"/>';
+  });
+  [0.5, 0, -0.5].forEach(function(v){
+    s += '<text x="' + (A0 - 11) + '" y="' + (Yp(v) + 3.5).toFixed(1) + '" text-anchor="end" fill="var(--red-)" ' + MONO + ' font-size="10">' + (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v) + '</text>';
+  });
+  [[0, "0"], [0.5, sci(EZ / 2)], [1, sci(EZ)]].forEach(function(t){
+    s += '<text x="' + (A0 - 11) + '" y="' + (eB - t[0] * (eB - eT) + 3.5).toFixed(1) + '" text-anchor="end" fill="var(--ox)" ' + MONO + ' font-size="9.5">' + t[1] + '</text>';
+  });
+  /* the bulk keeps its own scale, written inside its frame */
+  s += '<text x="' + (B0 + 3) + '" y="' + (eT + 10) + '" fill="var(--muted)" ' + MONO + ' font-size="9">' + Math.round(EBK) + '</text>';
+  s += '<text x="' + (B0 + 3) + '" y="' + (eB - 3) + '" fill="var(--muted)" ' + MONO + ' font-size="9">0</text>';
+  s += '<text x="' + A0 + '" y="' + (pT - 7) + '" fill="var(--red-)" ' + MONO + ' font-size="10.5" font-weight="600">potential ψ / V</text>';
+  s += '<text x="' + A0 + '" y="' + (eT - 7) + '" fill="var(--ox)" ' + MONO + ' font-size="10.5" font-weight="600">field strength |E| / V m⁻¹</text>';
+
+  /* the ions: a thin background of both, plus each electrode's excess counter-charge */
+  s += '<rect x="' + A0 + '" y="' + sT + '" width="' + (C1 - A0) + '" height="' + (sB - sT) + '" fill="var(--surface-2)" opacity="0.6"/>';
+  s += '<rect x="' + (A0 - 7) + '" y="' + sT + '" width="7" height="' + (eB - sT) + '" fill="var(--elec)"/>';
+  s += '<rect x="' + C1 + '" y="' + sT + '" width="7" height="' + (eB - sT) + '" fill="var(--elec)"/>';
+  var seed = 11;
+  function rnd(){ seed = (seed * 16807) % 2147483647; return seed / 2147483647; }
+  function ion(x, y, cat){
+    return cat ? '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="2.8" fill="var(--ink-2)"/>'
+               : '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="2.5" fill="none" stroke="var(--ink-2)" stroke-width="1.2"/>';
+  }
+  [[A0 + 3, A1 - 3], [B0 + 3, B1 - 3], [C0 + 3, C1 - 3]].forEach(function(g){
+    for(k = 0; k < 7; k++){ s += ion(g[0] + rnd() * (g[1] - g[0]), sT + 6 + rnd() * (sB - sT - 12), k % 2 === 0); }
+  });
+  var nEx = Math.round(16 * Math.min(1, Math.abs(m.Vi) / 0.5)), leftCat = m.Vi < 0;
+  for(k = 0; k < nEx; k++){
+    var dd = EC_DH + m.lam * -Math.log(1 - (k + 0.5) / (nEx + 1) * 0.95);
+    if(dd < Z){
+      s += ion(XA(dd) + 2, sT + 6 + rnd() * (sB - sT - 12), leftCat);
+      s += ion(XC(dd) - 2, sT + 6 + rnd() * (sB - sT - 12), !leftCat);
+    }
+  }
+  if(Math.abs(m.Eb) > 1){
+    var la = 6 + 22 * Math.min(1, Math.abs(m.Eb) / 200), dir = m.Eb > 0 ? 1 : -1, xm = (B0 + B1) / 2;
+    s += fpArrow(xm - dir * la / 2, sT + 16, xm + dir * la / 2, sT + 16, "var(--go)", 1.6);
+    s += fpArrow(xm + dir * la / 2, sB - 14, xm - dir * la / 2, sB - 14, "var(--go)", 1.6);
+  }
+  s += '<text x="' + (A0 - 3) + '" y="' + (sT - 3) + '" fill="var(--muted)" ' + MONO + ' font-size="10">' + (m.Vt >= 0 ? "+" : "−") + ' electrode</text>';
+  s += '<text x="' + (C1 + 7) + '" y="' + (sT - 3) + '" text-anchor="end" fill="var(--muted)" ' + MONO + ' font-size="10">' + (m.Vt >= 0 ? "−" : "+") + ' electrode</text>';
+
+  /* the potential */
+  var pa = [], pc = [], ea = [], ec = [], N = 90;
+  for(j = 0; j <= N; j++){
+    var d = Z * j / N;
+    pa.push(XA(d).toFixed(1) + "," + Yp(m.Vt / 2 - drop(d)).toFixed(1));
+    pc.push(XC(d).toFixed(1) + "," + Yp(-m.Vt / 2 + drop(d)).toFixed(1));
+    ea.push(XA(d).toFixed(1) + "," + Yz(field(d)).toFixed(1));
+    ec.push(XC(d).toFixed(1) + "," + Yz(field(d)).toFixed(1));
+  }
+  var psL = m.Vt / 2 - m.Vi, psR = -m.Vt / 2 + m.Vi;
+  s += '<line x1="' + A1 + '" y1="' + Yp(psL).toFixed(1) + '" x2="' + B0 + '" y2="' + Yp(psL).toFixed(1) + '" stroke="var(--red-)" stroke-width="1.4" stroke-dasharray="2 3"/>';
+  s += '<line x1="' + B1 + '" y1="' + Yp(psR).toFixed(1) + '" x2="' + C0 + '" y2="' + Yp(psR).toFixed(1) + '" stroke="var(--red-)" stroke-width="1.4" stroke-dasharray="2 3"/>';
+  s += '<polyline points="' + pa.join(" ") + '" fill="none" stroke="var(--red-)" stroke-width="2.4"/>';
+  s += '<polyline points="' + pc.join(" ") + '" fill="none" stroke="var(--red-)" stroke-width="2.4"/>';
+  s += '<line x1="' + B0 + '" y1="' + Yp(psL).toFixed(1) + '" x2="' + B1 + '" y2="' + Yp(psR).toFixed(1) + '" stroke="var(--red-)" stroke-width="2.4"/>';
+  /* the field */
+  var yb = Yb(m.Eb);
+  s += '<polyline points="' + ea.join(" ") + '" fill="none" stroke="var(--ox)" stroke-width="2.2"/>';
+  s += '<polyline points="' + ec.join(" ") + '" fill="none" stroke="var(--ox)" stroke-width="2.2"/>';
+  s += '<line x1="' + B0 + '" y1="' + yb.toFixed(1) + '" x2="' + B1 + '" y2="' + yb.toFixed(1) + '" stroke="var(--ox)" stroke-width="2.2"/>';
+  /* the two numbers that matter, in the bulk */
+  var ebTxt = Math.abs(m.Eb) < 1 ? "E ≈ 0" : "E = " + Math.abs(m.Eb).toPrecision(3) + " V/m";
+  s += fpTxt((B0 + B1) / 2 + 8, Math.max(eT + 12, Math.min(yb - 8, eB - 10)), ebTxt, "var(--ox)", "middle", 10.5, 600);
+  /* flat or sloped, said in words over the bulk */
+  var flat = Math.abs(m.Eb) < 1;
+  s += fpTxt((B0 + B1) / 2, pT - 7, flat ? "flat: no current" : "slope = j/σ: current flowing", flat ? "var(--muted)" : "var(--go)", "middle", 10.5, 600);
+  s += fpTxt((B0 + B1) / 2, Math.max(pT + 12, Math.min(pB - 6, Yp((psL + psR) / 2) - 10)), "bulk: " + Math.abs(m.Vb).toFixed(2) + " V", "var(--red-)", "middle", 10.5, 600);
+  /* each layer's drop, on the side of the curve away from where it runs */
+  var up = m.Vt >= 0 ? 1 : -1;
+  s += fpTxt(A1 - 4, Math.max(pT + 12, Math.min(pB - 6, Yp(m.Vt / 2 - m.Vi) + 16 * up)), Math.abs(m.Vi).toFixed(2) + " V across it", "var(--red-)", "end", 10.5, 600);
+  s += fpTxt(C0 + 4, Math.max(pT + 12, Math.min(pB - 6, Yp(-m.Vt / 2 + m.Vi) - 9 * up)), Math.abs(m.Vi).toFixed(2) + " V across it", "var(--red-)", "start", 10.5, 600);
+
+  /* distances */
+  var zt = +(Z * 1e9).toPrecision(2);
+  s += '<text x="' + A0 + '" y="' + (eB + 14) + '" text-anchor="start" fill="var(--muted)" ' + MONO + ' font-size="10">0</text>';
+  s += '<text x="' + A1 + '" y="' + (eB + 14) + '" text-anchor="end" fill="var(--muted)" ' + MONO + ' font-size="10">' + zt + ' nm</text>';
+  s += '<text x="' + ((B0 + B1) / 2) + '" y="' + (eB + 14) + '" text-anchor="middle" fill="var(--muted)" ' + MONO + ' font-size="10">5 mm of bulk</text>';
+  s += '<text x="' + C0 + '" y="' + (eB + 14) + '" text-anchor="start" fill="var(--muted)" ' + MONO + ' font-size="10">' + zt + ' nm</text>';
+  s += '<text x="' + C1 + '" y="' + (eB + 14) + '" text-anchor="end" fill="var(--muted)" ' + MONO + ' font-size="10">0</text>';
+  s += '<text x="' + ((A0 + A1) / 2) + '" y="' + (eB + 30) + '" text-anchor="middle" fill="var(--muted)" ' + MONO + ' font-size="10">from the left electrode</text>';
+  s += '<text x="' + ((C0 + C1) / 2) + '" y="' + (eB + 30) + '" text-anchor="middle" fill="var(--muted)" ' + MONO + ' font-size="10">from the right electrode</text>';
+  s += '<text x="' + ((A0 + A1) / 2) + '" y="' + (eB + 44) + '" text-anchor="middle" fill="var(--muted)" ' + MONO + ' font-size="9.5">grey: compact layer · 1/κ = ' + (m.lam * 1e9).toFixed(2) + ' nm</text>';
+  document.getElementById("ecpic").innerHTML = s;
+
+  /* numbers */
+  var ac = EC.k === "ac";
+  document.getElementById("ecVv").textContent = m.V.toFixed(2) + " V";
+  document.getElementById("ecTv").textContent = ac ? "phase " + Math.round(((EC.ph % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI) * 180 / Math.PI) + "°" : ecTime(m.t);
+  document.getElementById("ecTf").textContent = ac ? "AC: steady, the slider is not used" : "Time since switching on";
+  document.getElementById("ecT").disabled = ac;
+  document.getElementById("ecPlay").innerHTML = EC.play ? "&#10074;&#10074; Pause" : (ac ? "&#9654; Run the AC" : "&#9654; Switch the voltage on");
+  document.getElementById("ecL").textContent = (m.lam * 1e9).toFixed(2) + " nm";
+  document.getElementById("ecS").textContent = m.sig.toPrecision(3) + " S/m";
+  document.getElementById("ecTe").textContent = ecTime(m.teps);
+  document.getElementById("ecTau").textContent = ecTime(EC.k === "far" ? m.tauf : m.tau) + (EC.k === "far" ? " (with the Faradaic reaction)" : "");
+  document.getElementById("ecEb").textContent = Math.abs(m.Eb) < 1 ? "≈ 0 V/m" : m.Eb.toPrecision(3) + " V/m";
+  document.getElementById("ecVi").textContent = m.Vi.toFixed(3) + " V";
+  document.getElementById("ecEh").innerHTML = sciH(m.EH, 2) + " V/m";
+  document.getElementById("ecJ").textContent = Math.abs(m.j) / 10 < 1e-3 ? "≈ 0" : (m.j / 10).toPrecision(3) + " mA/cm²";
+  document.getElementById("ecU").textContent = Math.abs(m.Eb) < 1 ? "≈ 0" : (EC_UK * m.Eb * 1e6).toPrecision(3) + " µm/s";
+  document.getElementById("ecNote").textContent = ac ? "1 kHz, drawn at the instant shown" : "t = " + ecTime(m.t) + " after switching on";
+
+  var r, frac = Math.abs(2 * m.Vi) / Math.max(1e-9, Math.abs(m.Vt));
+  if(EC.k === "block"){
+    if(m.t < m.teps) r = "<b>Just switched on.</b> In the first " + ecTime(m.teps) + " (ε/σ) the ions have barely started to move, so the electrolyte acts like the insulator above: "
+      + "a uniform field ΔV/d = " + (m.V / EC_L).toFixed(0) + " V/m fills the whole gap.";
+    else if(m.t < 0.05 * m.tau) r = "<b>The bulk conducts.</b> A current of " + (m.j / 10).toPrecision(2) + " mA/cm² flows, carried by <b>migration</b> in the bulk field: "
+      + "cations drift toward the − electrode, anions toward the +. Where they arrive they pile up, and the double layers start to charge.";
+    else if(m.t < 5 * m.tau) r = "<b>The double layers are charging.</b> " + Math.round(frac * 100) + " % of the voltage now sits across the two layers, "
+      + "and the bulk field has fallen to " + Math.abs(m.Eb).toPrecision(2) + " V/m. The time constant is τ = R<sub>s</sub>C<sub>dl</sub> = " + ecTime(m.tau) + ".";
+    else r = "<b>Steady state: the bulk is field-free.</b> The whole voltage sits across two layers a few nanometres thick, where the field reaches "
+      + sciH(m.EH, 1) + " V/m. In the bulk ψ is flat, E ≈ 0, so there is no migration and no current — although the electrodes are still " + m.V.toFixed(2) + " V apart.";
+  }else if(EC.k === "far"){
+    if(m.t < m.teps) r = "<b>Just switched on.</b> The ions have not moved yet: a uniform field of " + (m.V / EC_L).toFixed(0) + " V/m fills the gap.";
+    else if(m.t < 5 * m.tauf) r = "<b>Charging, while the Faradaic reaction starts.</b> The double layers take up the overpotential; the rest of the voltage stays across the bulk, "
+      + "where migration carries the current.";
+    else r = "<b>Steady state with a current.</b> The Faradaic reaction passes j = " + (m.jss / 10).toPrecision(3) + " mA/cm², so a field E = j/σ = " + m.Eb.toPrecision(3)
+      + " V/m stays in the bulk and drives <b>migration</b>. Each double layer holds only its overpotential, η = " + m.eta.toFixed(3) + " V; the bulk takes the iR drop, "
+      + m.Vb.toFixed(2) + " V.";
+  }else{
+    r = "<b>AC, 1 kHz.</b> Each half-cycle lasts 0.5 ms, too short for the double layers to charge fully (τ = " + ecTime(m.tau) + "), so "
+      + +(m.bulkAmp / m.V * 100).toPrecision(3) + " % of the voltage amplitude stays across the bulk, and E ≈ ΔV/d there again. "
+      + "That is why conductivity is measured with AC: the double layers are bypassed, and the field in the bulk is the one the ions migrate in.";
+  }
+  document.getElementById("ecRead").innerHTML = r;
+}
+
+pillGroup("ecCase", function(b){ EC.k = b.getAttribute("data-k"); EC.play = false; EC.ph = 0; ecDraw(); });
+pillGroup("ecC", function(b){ EC.c = +b.getAttribute("data-c"); ecDraw(); });
+["ecV", "ecT"].forEach(function(id){ document.getElementById(id).addEventListener("input", function(){ if(id === "ecT") EC.play = false; ecDraw(); }); });
+document.getElementById("ecPlay").addEventListener("click", function(){
+  var t = document.getElementById("ecT");
+  if(!EC.play && EC.k !== "ac" && +t.value >= +t.max - 0.01) t.value = t.min;
+  EC.play = !EC.play; EC.last = 0; ecDraw();
+});
+ANIM.push({panel: "p-fp", tick: function(ts){
+  if(!EC.play) return;
+  var dt = EC.last ? Math.min(0.1, (ts - EC.last) / 1000) : 0;
+  EC.last = ts;
+  if(EC.k === "ac"){
+    EC.ph += dt * 2 * Math.PI / 3;
+  }else{
+    var t = document.getElementById("ecT"), v = +t.value + dt * 9 / 7;
+    if(v >= +t.max){ v = +t.max; EC.play = false; }
+    t.value = v;
+  }
+  ecDraw();
+}});
+ecDraw();
+
+window.requestAnimationFrame(animLoop);
+
+/* ---- submit straight to the course sheet ----------------------------------
+   Paste the Apps Script /exec URL between the quotes to switch this on.
+   Left empty, the button stays hidden and only the download exists.        */
+var SUBMIT_URL = "https://script.google.com/macros/s/AKfycbxPm7WrbttFu6-gnTi__IcUPt-816GthK0eI8TPuwOZyYlcRW3RAWJlmsr791moxBc5GA/exec";
+
+var sendBtn=document.getElementById("sendBtn");
+if(SUBMIT_URL){
+  sendBtn.hidden=false;
+  dlHint.textContent="Press Submit to send your result to the course. The download is a backup.";
+}
+
+sendBtn.addEventListener("click",function(){
+  var id=(sId.value||"").trim();
+  if(!id){ dlHint.textContent="Enter your student ID first."; return; }
+  var r=receipt();
+  var payload={
+    lecture:"L5", student_id:id, completed_utc:finishedAt||new Date().toISOString(),
+    score:r.score, total:QZ.length, percent:r.pct, verification:r.vcode,
+    answers:picks.map(function(p){ return p>=0?LETTERS[p]:"-"; }),
+    ok:picks.map(function(p,i){ return p===QZ[i].a?1:0; })
+  };
+  sendBtn.disabled=true;
+  dlHint.textContent="Sending...";
+
+  /* text/plain keeps this a simple request, so the browser sends it without
+     a preflight the Apps Script endpoint cannot answer */
+  fetch(SUBMIT_URL,{
+    method:"POST",
+    headers:{"Content-Type":"text/plain;charset=utf-8"},
+    body:JSON.stringify(payload)
+  })
+  .then(function(res){ return res.json(); })
+  .then(function(j){
+    if(j && j.ok){
+      sendBtn.textContent="Submitted ✓";
+      dlHint.textContent="Recorded for student ID "+id+". You can close this page.";
+    }else{
+      throw new Error((j && j.error) || "rejected");
+    }
+  })
+  .catch(function(){
+    /* the response could not be read - resend blind so the record still lands,
+       then tell the student to keep the file as proof */
+    fetch(SUBMIT_URL,{method:"POST",mode:"no-cors",
+      headers:{"Content-Type":"text/plain;charset=utf-8"},
+      body:JSON.stringify(payload)}).catch(function(){});
+    sendBtn.disabled=false;
+    sendBtn.textContent="Submit to the course";
+    dlHint.textContent="Sent, but the confirmation did not come back. "
+      + "Download the file as well and keep it - it is your proof of submission.";
+  });
+});
+
+loadState();
+render();
+
+})();
+</script>
+</body>
+</html>
