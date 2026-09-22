@@ -879,7 +879,7 @@ function receipt(){
   var stamp=finishedAt||new Date().toISOString();
   var vc=code(id+"|"+stamp+"|"+picks.join(""));
   var head=["lecture","student_id","completed_utc","score","total","percent","verification"];
-  var row=["L5",id,stamp,s,QZ.length,pct,vc];
+  var row=["L6",id,stamp,s,QZ.length,pct,vc];
   for(var i=0;i<QZ.length;i++){ head.push("a"+(i+1)); row.push(picks[i]>=0?LETTERS[picks[i]]:"-"); }
   for(var j=0;j<QZ.length;j++){ head.push("ok"+(j+1)); row.push(picks[j]===QZ[j].a?1:0); }
   function cell(v){ v=String(v); return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; }
@@ -952,7 +952,7 @@ dlBtn.addEventListener("click",function(){
     var blob=new Blob([r.csv],{type:"text/csv;charset=utf-8"});
     var url=URL.createObjectURL(blob);
     var a=document.createElement("a");
-    a.href=url; a.download="CH40051-L5-check_"+id.replace(/[^A-Za-z0-9_-]/g,"")+".csv";
+    a.href=url; a.download="CH40051-L6-check_"+id.replace(/[^A-Za-z0-9_-]/g,"")+".csv";
     a.style.display="none";
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(function(){URL.revokeObjectURL(url);},1000);
@@ -1939,7 +1939,7 @@ sendBtn.addEventListener("click",function(){
   if(!id){ dlHint.textContent="Enter your student ID first."; return; }
   var r=receipt();
   var payload={
-    lecture:"L5", student_id:id, completed_utc:finishedAt||new Date().toISOString(),
+    lecture:"L6", student_id:id, completed_utc:finishedAt||new Date().toISOString(),
     score:r.score, total:QZ.length, percent:r.pct, verification:r.vcode,
     answers:picks.map(function(p){ return p>=0?LETTERS[p]:"-"; }),
     ok:picks.map(function(p,i){ return p===QZ[i].a?1:0; })
@@ -1960,7 +1960,11 @@ sendBtn.addEventListener("click",function(){
       sendBtn.textContent="Submitted ✓";
       dlHint.textContent="Recorded for student ID "+id+". You can close this page.";
     }else{
-      throw new Error((j && j.error) || "rejected");
+      /* the sheet answered and refused (already recorded, no ID ...): say why, and do not resend */
+      sendBtn.disabled=false;
+      sendBtn.textContent="Submit to the course";
+      dlHint.textContent="Not recorded — "+((j && j.error) || "the course sheet refused it.")
+        + " Keep the downloaded file and tell your instructor if this looks wrong.";
     }
   })
   .catch(function(){
