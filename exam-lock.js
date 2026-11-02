@@ -15,7 +15,7 @@
  * sends a reader somewhere else when the page is not already the hub.
  */
 (function () {
-  var LOCKED = true;          /* <<< the only line to change */
+  var LOCKED = false;          /* <<< the only line to change */
 
   if (!LOCKED) return;
 
