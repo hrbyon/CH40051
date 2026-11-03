@@ -259,8 +259,8 @@ footer{margin-top:40px;padding-top:20px;border-top:1px solid var(--line);color:v
         <div class="notes2">
           <p class="hint"><b>Why a peak and not a plateau.</b> Walk the potential down and two things happen at once. The
             Nernst condition drags the surface ratio C<sub>O</sub>/C<sub>R</sub> down exponentially, which drives the
-            current <em>up</em>; and every electron taken costs one molecule of O from a layer that nothing is
-            replenishing, which drives the current <em>down</em>. The first wins early, the second wins late, and the
+            current <em>larger</em>; and every electron taken costs one molecule of O from a layer that nothing
+            is replenishing, which drives it <em>smaller</em>. The first wins early, the second wins late, and the
             crossing is the peak. Nothing about the peak is a property of the molecule alone.</p>
           <p class="hint"><b>Why &radic;&upsilon; and not &upsilon;.</b> The diffusion layer grows as &delta; &asymp;
             &radic;(Dt), and the experiment lasts t &asymp; RT/F&upsilon;. Sweep ten times faster and the layer is
@@ -587,9 +587,10 @@ footer{margin-top:40px;padding-top:20px;border-top:1px solid var(--line);color:v
         <div class="card-b stack" style="gap:12px">
           <svg id="rsfit" viewBox="0 0 520 330" style="width:100%;height:auto" role="img"
                aria-label="Peak current plotted against the square root of scan rate, with a straight line fitted through the origin and the points that deviate from it shown."></svg>
-          <p class="hint" style="margin:0"><b>Same current axis as the trace above</b>, and held fixed for the same
-            reason: the six dots are the six peaks, read straight off those voltammograms, so a height here and a
-            height there are one quantity. The grey line is a least-squares fit <b>forced through the origin</b>,
+          <p class="hint" style="margin:0"><b>Same current scale as the trace above</b>, and held fixed for the
+            same reason: the six dots are the six peak <em>heights</em>, measured straight off those voltammograms.
+            The peaks there point downwards, because reduction is a cathodic current and this page draws anodic
+            current up; here they are plotted as the magnitudes |i<sub>p</sub>| that the equation is written in. The grey line is a least-squares fit <b>forced through the origin</b>,
             because the equation has no intercept; the faint green one is what the equation <b>predicts</b> from the
             n, A, C* and D that went in. <b>Now drag k&deg; down.</b> The points do not leave the line &mdash;
             R&sup2; hardly moves &mdash; the <b>line itself tilts away from the predicted one</b>, because slow
@@ -1829,7 +1830,7 @@ function rsDraw(){
     q2 += tx(g.X0 - 6, g.py(gg) + 3.4, tickNum(gg * 1e6 / un.k), "var(--muted)", 9.5, "end");
   }
   q2 += xName(g.X0, g.X1, g.Y1 + 30, "√υ / (V/s)^½");
-  q2 += yName(16, g.Y0, g.Y1, "i_p / " + un.u);
+  q2 += yName(16, g.Y0, g.Y1, "|i_p| / " + un.u);
   q2 += ln(g.px(0), g.py(0), g.px(xm), g.py(mRS * xm), "var(--go)", 1.6, "2 4", 0.85);
   q2 += ln(g.px(0), g.py(0), g.px(xm), g.py(m * xm), "var(--line-2)", 1.6, "5 4");
   pts.forEach(function(q, i){
@@ -2381,7 +2382,7 @@ var QZ1 = [
      "Because the electron transfer becomes slower as the overpotential grows",
      "Because the double-layer charging current decays away after the peak"],
   a:0,
-  w:"Two things happen at once. Nernst drags the surface ratio down exponentially, which drives the current <em>up</em>; and every electron taken costs one molecule of O from a layer that only diffusion replenishes, which drives it <em>down</em>. The first wins early, the second wins late, and the peak is where they cross. After it, the surface has been empty for a while and the only thing still changing is the <b>thickness</b> of the depleted layer, &delta; &asymp; &radic;(Dt) &mdash; so the gradient, and the current, fall as 1/&radic;t. <b>Stirring is exactly what removes the peak</b>: a rotating disc holds &delta; fixed, so the current has nowhere to fall to and the wave becomes a plateau. Bulk depletion is negligible (a CV consumes a vanishing fraction of the cell), the kinetics get <em>faster</em> with overpotential, not slower, and charging current is a constant offset, not a peak."},
+  w:"Two things happen at once. Nernst drags the surface ratio down exponentially, which drives the current <em>larger</em>; and every electron taken costs one molecule of O from a layer that only diffusion replenishes, which drives it <em>smaller</em>. The first wins early, the second wins late, and the peak is where they cross. After it, the surface has been empty for a while and the only thing still changing is the <b>thickness</b> of the depleted layer, &delta; &asymp; &radic;(Dt) &mdash; so the gradient, and the current, fall as 1/&radic;t. <b>Stirring is exactly what removes the peak</b>: a rotating disc holds &delta; fixed, so the current has nowhere to fall to and the wave becomes a plateau. Bulk depletion is negligible (a CV consumes a vanishing fraction of the cell), the kinetics get <em>faster</em> with overpotential, not slower, and charging current is a constant offset, not a peak."},
 
  {q:"A couple gives &Delta;E<sub>p</sub> = 59 mV at 20 mV/s and 115 mV at 2 V/s, with |i<sub>p,a</sub>/i<sub>p,c</sub>| = 1.0 at both rates. What has changed?",
   o:["Nothing about the molecule &mdash; &Lambda; = k&deg;/&radic;(DF&upsilon;/RT) has fallen, so the electron transfer can no longer keep Nernst at the surface",
